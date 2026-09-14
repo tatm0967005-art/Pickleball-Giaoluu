@@ -17,14 +17,15 @@ function defaultConfig_() {
     eventEdition: "Lần 3",
     eventSubtitle: "Giải giao lưu Pickleball nội bộ",
     sessions: [
-      { id: "s1", label: "Ngày 04/10/2026" },
-      { id: "s2", label: "Ngày 18/10/2026" }
+      { id: "s1", label: "Ngày 04/10/2026" }
     ],
     eventPurpose: "Sẽ xác nhận sau",
     eventFormat: "Sẽ xác nhận sau",
     eventAudience: "Sẽ xác nhận sau",
     registrationOpen: true,
-    adminPassword: "sabeco2026"
+    adminPassword: "sabeco2026",
+    bannerImageUrl: "",
+    registrationDeadline: "2026-09-17T23:59"
   };
 }
 

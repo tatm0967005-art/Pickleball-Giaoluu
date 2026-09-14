@@ -612,8 +612,7 @@
       eventEdition: "Lần 3",
       eventSubtitle: "Giải giao lưu Pickleball nội bộ",
       sessions: [
-        { id: "s1", label: "Ngày 04/10/2026" },
-        { id: "s2", label: "Ngày 18/10/2026" }
+        { id: "s1", label: "Ngày 04/10/2026" }
       ],
       eventPurpose: "Sẽ xác nhận sau",
       eventFormat: "Sẽ xác nhận sau",
@@ -811,8 +810,10 @@
     return unit(days, 'Ngày') + unit(hours, 'Giờ') + unit(mins, 'Phút') + unit(sec, 'Giây');
   }
 
+  var DEFAULT_REGISTRATION_DEADLINE = '2026-09-17T23:59';
+
   function countdownStripHTML(c){
-    var target = new Date(c.registrationDeadline || '');
+    var target = new Date(c.registrationDeadline || DEFAULT_REGISTRATION_DEADLINE);
     if(isNaN(target.getTime())) return '';
     return '' +
       '<div class="countdown-strip" id="countdownStrip" data-deadline="' + target.getTime() + '">' +
@@ -1063,9 +1064,25 @@
     } else if(!c.registrationOpen){
       body = '<div class="card"><h2>Đăng ký đã đóng</h2><p class="lead" style="border:none;padding:0;">Ban tổ chức hiện không nhận thêm đăng ký cho giải này. Vui lòng liên hệ ban tổ chức nếu bạn cần hỗ trợ.</p></div>';
     } else {
-      var sessionBoxes = c.sessions.map(function(s){
-        return '<label class="choice"><input type="checkbox" name="session" value="' + esc(s.id) + '"><span class="box">' + esc(s.label) + '</span></label>';
-      }).join('');
+      var sessionField;
+      if(c.sessions.length <= 1){
+        var soloLabel = c.sessions.length ? c.sessions[0].label : '';
+        sessionField = '' +
+          '<div class="field">' +
+            '<label class="flabel">📅 Ngày thi đấu</label>' +
+            '<div class="hint" style="margin-top:0;font-size:14.5px;color:var(--ink);">' + esc(soloLabel) + '</div>' +
+          '</div>';
+      } else {
+        var sessionBoxes = c.sessions.map(function(s){
+          return '<label class="choice"><input type="checkbox" name="session" value="' + esc(s.id) + '"><span class="box">' + esc(s.label) + '</span></label>';
+        }).join('');
+        sessionField = '' +
+          '<div class="field">' +
+            '<label class="flabel">📅 Thời gian tham dự được</label>' +
+            '<div class="choice-row session-row">' + sessionBoxes + '</div>' +
+            '<div class="hint">Có thể chọn một hoặc nhiều ngày nha.</div>' +
+          '</div>';
+      }
       body = '' +
         '<form class="card" id="regForm" novalidate>' +
           '<h2>Đăng ký tham dự 🏓</h2>' +
@@ -1095,11 +1112,7 @@
             '<input type="number" name="namSinh" min="1940" max="2015" placeholder="VD: 1990" required style="max-width:160px;">' +
           '</div>' +
 
-          '<div class="field">' +
-            '<label class="flabel">📅 Thời gian tham dự được</label>' +
-            '<div class="choice-row session-row">' + sessionBoxes + '</div>' +
-            '<div class="hint">Có thể chọn một hoặc cả hai ngày nha.</div>' +
-          '</div>' +
+          sessionField +
 
           '<div id="formErr" class="err" style="display:none;"></div>' +
 
@@ -1132,7 +1145,9 @@
       var donVi = (fd.get('donVi')||'').toString().trim();
       var gioiTinh = fd.get('gioiTinh');
       var namSinh = (fd.get('namSinh')||'').toString().trim();
-      var sessions = fd.getAll('session');
+      var sessions = state.config.sessions.length <= 1 ?
+        (state.config.sessions.length ? [state.config.sessions[0].id] : []) :
+        fd.getAll('session');
 
       if(!hoTen || !donVi || !gioiTinh || !namSinh || sessions.length===0){
         errEl.textContent = 'Vui lòng điền đầy đủ thông tin, bao gồm ít nhất một ngày tham dự.';
@@ -1419,13 +1434,20 @@
   }
 
   // ---------------- Admin config ----------------
+  function sessionRowHTML(s, idx){
+    return '<div class="field session-field-row" data-row-id="'+esc(s.id)+'">' +
+      '<label class="flabel">Nhãn ngày thi đấu #'+idx+'</label>' +
+      '<div style="display:flex;gap:8px;">' +
+        '<input type="text" data-session-id="'+esc(s.id)+'" class="sessInput" value="'+esc(s.label)+'" style="flex:1;">' +
+        '<button type="button" class="btn-danger btnRemoveSession" style="flex-shrink:0;">Xóa</button>' +
+      '</div>' +
+    '</div>';
+  }
+
   function renderAdminConfig(){
     var c = state.config;
     var sessionRows = c.sessions.map(function(s, idx){
-      return '<div class="field">' +
-        '<label class="flabel">Nhãn ngày thi đấu #'+(idx+1)+'</label>' +
-        '<input type="text" data-session-id="'+esc(s.id)+'" class="sessInput" value="'+esc(s.label)+'">' +
-      '</div>';
+      return sessionRowHTML(s, idx + 1);
     }).join('');
 
     var bannerFieldHTML = '' +
@@ -1464,9 +1486,11 @@
           '<div class="field"><label class="flabel">Thể thức thi đấu</label><textarea id="cfgFormat">'+esc(c.eventFormat)+'</textarea></div>' +
           '<div class="field"><label class="flabel">Đối tượng tham gia</label><textarea id="cfgAudience">'+esc(c.eventAudience)+'</textarea></div>' +
 
-          sessionRows +
+          '<div class="field"><label class="flabel">Các ngày thi đấu</label></div>' +
+          '<div id="sessionRowsContainer">' + sessionRows + '</div>' +
+          '<button type="button" class="btn-outline" id="btnAddSession" style="margin-bottom:20px;">+ Thêm ngày thi đấu</button>' +
 
-          '<div class="field"><label class="flabel">⏰ Hạn chót đăng ký (hiển thị đếm ngược)</label><input type="datetime-local" id="cfgDeadline" value="'+esc(toDatetimeLocalValue(c.registrationDeadline))+'"></div>' +
+          '<div class="field"><label class="flabel">⏰ Hạn chót đăng ký (hiển thị đếm ngược)</label><input type="datetime-local" id="cfgDeadline" value="'+esc(toDatetimeLocalValue(c.registrationDeadline || DEFAULT_REGISTRATION_DEADLINE))+'"></div>' +
 
           '<div class="toggle-row">' +
             '<input type="checkbox" id="cfgOpen" '+(c.registrationOpen?'checked':'')+'>' +
@@ -1520,13 +1544,43 @@
       uploadMsg.textContent = 'Đã bỏ banner, sẽ dùng giao diện mặc định sau khi lưu.';
     });
 
+    function renumberSessionRows(){
+      var rows = document.querySelectorAll('#sessionRowsContainer .session-field-row');
+      Array.prototype.forEach.call(rows, function(row, idx){
+        row.querySelector('.flabel').textContent = 'Nhãn ngày thi đấu #' + (idx + 1);
+      });
+    }
+
+    var sessionsContainer = document.getElementById('sessionRowsContainer');
+    sessionsContainer.addEventListener('click', function(e){
+      var btn = e.target.closest('.btnRemoveSession');
+      if(!btn) return;
+      var rows = sessionsContainer.querySelectorAll('.session-field-row');
+      if(rows.length <= 1){
+        alert('Giải cần ít nhất 1 ngày thi đấu.');
+        return;
+      }
+      btn.closest('.session-field-row').remove();
+      renumberSessionRows();
+    });
+
+    document.getElementById('btnAddSession').addEventListener('click', function(){
+      var newId = 's' + Date.now().toString(36);
+      var rowCount = sessionsContainer.querySelectorAll('.session-field-row').length;
+      var div = document.createElement('div');
+      div.innerHTML = sessionRowHTML({ id: newId, label: '' }, rowCount + 1);
+      sessionsContainer.appendChild(div.firstChild);
+    });
+
     document.getElementById('cfgForm').addEventListener('submit', async function(e){
       e.preventDefault();
       var c = state.config;
-      var newSessions = c.sessions.map(function(s){
-        var input = document.querySelector('.sessInput[data-session-id="'+s.id+'"]');
-        return { id: s.id, label: input.value.trim() || s.label };
-      });
+      var newSessions = Array.prototype.map.call(
+        document.querySelectorAll('#sessionRowsContainer .sessInput'),
+        function(input){
+          return { id: input.getAttribute('data-session-id'), label: input.value.trim() || 'Ngày thi đấu' };
+        }
+      );
       var newCfg = {
         eventTitle: document.getElementById('cfgTitle').value.trim() || c.eventTitle,
         eventEdition: document.getElementById('cfgEdition').value.trim() || c.eventEdition,
@@ -1538,7 +1592,7 @@
         registrationOpen: document.getElementById('cfgOpen').checked,
         adminPassword: document.getElementById('cfgPassword').value.trim() || c.adminPassword,
         bannerImageUrl: pendingBanner,
-        registrationDeadline: document.getElementById('cfgDeadline').value || c.registrationDeadline
+        registrationDeadline: document.getElementById('cfgDeadline').value || c.registrationDeadline || DEFAULT_REGISTRATION_DEADLINE
       };
       var msg = document.getElementById('cfgMsg');
       try{
