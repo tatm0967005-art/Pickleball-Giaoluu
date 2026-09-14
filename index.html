@@ -489,6 +489,32 @@
   }
   .admin-topbar a:hover, .admin-topbar button.linklike:hover{ opacity:1; text-decoration:underline; }
 
+  .admin-tabs{
+    display:flex; gap:6px; flex-wrap:wrap;
+    background:var(--court-dark);
+    padding:0 24px 14px;
+  }
+  .admintab{
+    color:rgba(246,242,231,0.75);
+    text-decoration:none;
+    font-size:13.5px;
+    font-weight:700;
+    padding:8px 16px;
+    border-radius:999px;
+    background:rgba(246,242,231,0.08);
+  }
+  .admintab:hover{ color:var(--line); background:rgba(246,242,231,0.16); }
+  .admintab.active{ background:var(--ball); color:var(--court-dark); }
+
+  .banner-preview-wrap{ margin-bottom:8px; }
+  .banner-preview{
+    max-width:100%; width:280px; max-height:130px;
+    object-fit:cover;
+    border-radius:6px;
+    border:1px solid rgba(31,107,74,0.25);
+    display:block;
+  }
+
   .stat-grid{
     display:grid;
     grid-template-columns:repeat(auto-fit, minmax(150px,1fr));
@@ -562,7 +588,8 @@
       eventFormat: "Sẽ xác nhận sau",
       eventAudience: "Sẽ xác nhận sau",
       registrationOpen: true,
-      adminPassword: "sabeco2026"
+      adminPassword: "sabeco2026",
+      bannerImageUrl: ""
     };
   }
 
@@ -584,6 +611,45 @@
     adminPasswordCache: '',
     loadError: ''
   };
+
+  // ====== ĐIỀU HƯỚNG (URL dạng #/...) ======
+  function routeSuffixFor(view){
+    if(view === 'publicList') return '/danh-sach';
+    if(view === 'adminLogin') return '/admin';
+    if(view === 'adminDashboard') return '/admin/duyet';
+    if(view === 'adminConfig') return '/admin/giai-dau';
+    return '/';
+  }
+
+  function resolveRoute(rawHash){
+    var path = String(rawHash || '').replace(/^#/, '').replace(/\/+$/, '');
+    if(path === '' || path === '/') return 'register';
+    if(path === '/danh-sach') return 'publicList';
+    if(path === '/admin') return state.isAdmin ? 'adminDashboard' : 'adminLogin';
+    if(path === '/admin/duyet') return state.isAdmin ? 'adminDashboard' : 'adminLogin';
+    if(path === '/admin/giai-dau') return state.isAdmin ? 'adminConfig' : 'adminLogin';
+    return 'register';
+  }
+
+  function syncRoute(){
+    var view = resolveRoute(location.hash);
+    var canonical = '#' + routeSuffixFor(view);
+    if(location.hash !== canonical){
+      history.replaceState(null, '', canonical);
+    }
+    state.view = view;
+    render();
+  }
+
+  function goTo(path){
+    if(location.hash.replace(/^#/, '') === path){
+      syncRoute();
+    } else {
+      location.hash = path;
+    }
+  }
+
+  window.addEventListener('hashchange', syncRoute);
 
   function apiConfigured(){
     return API_URL && API_URL.indexOf('PASTE_YOUR') === -1;
@@ -661,6 +727,41 @@
     return '<div class="avatar-bubble" style="background:' + avatarColorFor(name) + ';" title="' + esc(name) + '">' + esc(initials(name)) + '</div>';
   }
 
+  var MAX_BANNER_BASE64_CHARS = 40000;
+
+  function compressImageFile(file, maxWidth, quality){
+    return new Promise(function(resolve, reject){
+      var reader = new FileReader();
+      reader.onload = function(){
+        var img = new Image();
+        img.onload = function(){
+          var scale = Math.min(1, maxWidth / img.width);
+          var w = Math.max(1, Math.round(img.width * scale));
+          var h = Math.max(1, Math.round(img.height * scale));
+          var canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = function(){ reject(new Error('bad_image')); };
+        img.src = reader.result;
+      };
+      reader.onerror = function(){ reject(new Error('read_failed')); };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function compressBannerFile(file){
+    var attempts = [[960, 0.72], [640, 0.6], [480, 0.5]];
+    var lastUrl = '';
+    for(var i=0;i<attempts.length;i++){
+      lastUrl = await compressImageFile(file, attempts[i][0], attempts[i][1]);
+      if(lastUrl.length <= MAX_BANNER_BASE64_CHARS) return lastUrl;
+    }
+    return null;
+  }
+
   function confettiHTML(){
     var colors = ['#D7DF23','#E8623D','#2E86AB','#8E4585','#B58A3D'];
     var pieces = '';
@@ -675,8 +776,12 @@
 
   function bannerHTML(){
     var c = state.config;
+    var hasImg = !!c.bannerImageUrl;
+    var styleAttr = hasImg ?
+      ' style="background-image:linear-gradient(160deg, rgba(21,59,41,0.72) 0%, rgba(21,59,41,0.85) 100%), url(&quot;' + c.bannerImageUrl.replace(/"/g,'') + '&quot;); background-size:cover; background-position:center;"' :
+      '';
     return '' +
-      '<div class="banner">' +
+      '<div class="banner' + (hasImg ? ' has-image' : '') + '"' + styleAttr + '>' +
         '<div class="fun-sticker">🎉 Vui là chính!</div>' +
         '<div class="banner-decor">' + paddlesSVG() + '</div>' +
         '<div class="banner-decor left">' + paddlesSVG() + '</div>' +
@@ -721,7 +826,7 @@
         '<div class="participants-strip">' +
           '<div class="avatar-stack">' + avatarsHTML + extra + '</div>' +
           '<div class="participants-text"><strong>' + total + '</strong> đồng đội đã đăng ký tham gia! 🎉</div>' +
-          '<a href="#" id="linkSeeListStrip" class="btn btn-outline" style="white-space:nowrap;">Xem danh sách →</a>' +
+          '<a href="#/danh-sach" class="btn btn-outline" style="white-space:nowrap;">Xem danh sách →</a>' +
         '</div>' +
       '</div>';
   }
@@ -774,7 +879,7 @@
             '<button class="btn btn-outline" style="width:100%;" id="btnAnother">Đăng ký thêm người khác</button>' +
           '</div>' +
           '<div style="text-align:center;margin-top:14px;">' +
-            '<a href="#" id="linkSeeList" style="font-size:13px;color:#4A5750;">Xem danh sách đã đăng ký</a>' +
+            '<a href="#/danh-sach" style="font-size:13px;color:#4A5750;">Xem danh sách đã đăng ký</a>' +
           '</div>' +
         '</div>';
     } else if(!c.registrationOpen){
@@ -829,22 +934,10 @@
       infoSectionHTML() +
       participantsPreviewHTML() +
       '<div class="wrap" style="padding-top:0;">' + body + '</div>' +
-      '<footer class="site-foot">SABECO và những người bạn — ' + esc(c.eventEdition) + ' &nbsp;·&nbsp; <a href="#" id="linkSeeList2">Danh sách đã đăng ký</a> &nbsp;·&nbsp; <a href="#" id="linkAdmin">Quản trị</a></footer>';
+      '<footer class="site-foot">SABECO và những người bạn — ' + esc(c.eventEdition) + ' &nbsp;·&nbsp; <a href="#/danh-sach">Danh sách đã đăng ký</a> &nbsp;·&nbsp; <a href="#/admin">Quản trị</a></footer>';
   }
 
   function bindRegister(){
-    var link = document.getElementById('linkAdmin');
-    if(link) link.addEventListener('click', function(e){ e.preventDefault(); state.view='adminLogin'; state.adminError=''; render(); });
-
-    var link2 = document.getElementById('linkSeeList2');
-    if(link2) link2.addEventListener('click', function(e){ e.preventDefault(); state.view='publicList'; render(); });
-
-    var link3 = document.getElementById('linkSeeList');
-    if(link3) link3.addEventListener('click', function(e){ e.preventDefault(); state.view='publicList'; render(); });
-
-    var linkStrip = document.getElementById('linkSeeListStrip');
-    if(linkStrip) linkStrip.addEventListener('click', function(e){ e.preventDefault(); state.view='publicList'; render(); });
-
     var again = document.getElementById('btnAnother');
     if(again) again.addEventListener('click', function(){ state.lastCode=''; render(); });
 
@@ -955,21 +1048,27 @@
           '<div class="attendee-grid">'+cards+'</div>' +
         '</div>' +
       '</div>' +
-      '<footer class="site-foot"><a href="#" id="linkBackReg">← Về trang đăng ký</a></footer>';
+      '<footer class="site-foot"><a href="#/">← Về trang đăng ký</a></footer>';
   }
 
   function bindPublicList(){
-    document.getElementById('linkBackReg').addEventListener('click', function(e){ e.preventDefault(); state.view='register'; render(); });
     Array.prototype.forEach.call(document.querySelectorAll('.listtab'), function(btn){
       btn.addEventListener('click', function(){ state.listFilterSession = btn.getAttribute('data-sess'); render(); });
     });
+  }
+
+  function adminTabsHTML(active){
+    return '<div class="admin-tabs">' +
+      '<a href="#/admin/duyet" class="admintab' + (active==='duyet' ? ' active' : '') + '">🗂️ Duyệt đăng ký</a>' +
+      '<a href="#/admin/giai-dau" class="admintab' + (active==='giaidau' ? ' active' : '') + '">🎨 Quản lý giải đấu</a>' +
+    '</div>';
   }
 
   // ---------------- Admin login ----------------
   function renderAdminLogin(){
     return '' +
       '<div class="admin-topbar"><div class="title">Quản trị giải đấu</div>' +
-      '<nav><a href="#" id="backToSite">Về trang đăng ký</a></nav></div>' +
+      '<nav><a href="#/">Về trang đăng ký</a></nav></div>' +
       '<div class="login-wrap">' +
         '<div class="card">' +
           '<h2>Đăng nhập quản trị</h2>' +
@@ -987,7 +1086,6 @@
   }
 
   function bindAdminLogin(){
-    document.getElementById('backToSite').addEventListener('click', function(e){ e.preventDefault(); state.view='register'; render(); });
     document.getElementById('loginForm').addEventListener('submit', async function(e){
       e.preventDefault();
       var pw = new FormData(e.target).get('pw');
@@ -1000,7 +1098,8 @@
           state.adminPasswordCache = pw;
           state.adminError = '';
           await refreshAll();
-          state.view = 'adminDashboard';
+          goTo('/admin/duyet');
+          return;
         } else {
           state.adminError = 'Mật khẩu không đúng.';
         }
@@ -1085,12 +1184,12 @@
       '<div class="admin-topbar">' +
         '<div class="title">Quản trị · '+esc(c.eventTitle)+' — '+esc(c.eventEdition)+'</div>' +
         '<nav>' +
-          '<a href="#" id="linkConfig">Cấu hình giải</a>' +
-          '<a href="#" id="linkPublicList">Danh sách công khai</a>' +
-          '<a href="#" id="linkBack">Về trang đăng ký</a>' +
+          '<a href="#/danh-sach">Danh sách công khai</a>' +
+          '<a href="#/">Về trang đăng ký</a>' +
           '<button class="linklike" id="btnLogout">Đăng xuất</button>' +
         '</nav>' +
       '</div>' +
+      adminTabsHTML('duyet') +
       '<div class="wrap wide">' +
         '<div class="stat-grid">'+statCards+'</div>' +
         '<div class="toolbar">' +
@@ -1108,10 +1207,7 @@
   }
 
   function bindAdminDashboard(){
-    document.getElementById('linkConfig').addEventListener('click', function(e){ e.preventDefault(); state.view='adminConfig'; render(); });
-    document.getElementById('linkPublicList').addEventListener('click', function(e){ e.preventDefault(); state.view='publicList'; render(); });
-    document.getElementById('linkBack').addEventListener('click', function(e){ e.preventDefault(); state.view='register'; render(); });
-    document.getElementById('btnLogout').addEventListener('click', function(){ state.isAdmin=false; state.view='register'; render(); });
+    document.getElementById('btnLogout').addEventListener('click', function(){ state.isAdmin=false; goTo('/'); });
 
     var search = document.getElementById('searchBox');
     search.addEventListener('input', function(){ state.search = search.value; render(); document.getElementById('searchBox').focus(); document.getElementById('searchBox').selectionStart = document.getElementById('searchBox').value.length; });
@@ -1191,17 +1287,33 @@
       '</div>';
     }).join('');
 
+    var bannerFieldHTML = '' +
+      '<div class="field">' +
+        '<label class="flabel">🖼️ Banner sự kiện (tùy chọn)</label>' +
+        '<div class="hint" style="margin-top:0;margin-bottom:8px;">Ảnh sẽ hiển thị làm nền banner đầu trang thay cho giao diện mặc định. Hệ thống tự nén ảnh nhỏ gọn trước khi lưu.</div>' +
+        '<div class="banner-preview-wrap" id="bannerPreviewWrap" style="'+(c.bannerImageUrl ? '' : 'display:none;')+'">' +
+          '<img id="bannerPreviewImg" class="banner-preview" src="'+(c.bannerImageUrl || '')+'">' +
+          '<button type="button" class="btn-danger" id="btnRemoveBanner" style="margin-top:8px;">Xóa banner</button>' +
+        '</div>' +
+        '<input type="file" accept="image/*" id="cfgBannerFile">' +
+        '<div id="bannerUploadMsg" class="hint" style="display:none;"></div>' +
+      '</div>';
+
     return '' +
       '<div class="admin-topbar">' +
-        '<div class="title">Cấu hình giải</div>' +
+        '<div class="title">Quản lý giải đấu</div>' +
         '<nav>' +
-          '<a href="#" id="linkDash">Về bảng quản trị</a>' +
+          '<a href="#/danh-sach">Danh sách công khai</a>' +
+          '<a href="#/">Về trang đăng ký</a>' +
         '</nav>' +
       '</div>' +
+      adminTabsHTML('giaidau') +
       '<div class="wrap">' +
         '<form class="card" id="cfgForm">' +
           '<h2>Thông tin giải đấu</h2>' +
           '<p class="lead">Thay đổi sẽ áp dụng ngay cho trang đăng ký.</p>' +
+
+          bannerFieldHTML +
 
           '<div class="field"><label class="flabel">Tên giải</label><input type="text" id="cfgTitle" value="'+esc(c.eventTitle)+'"></div>' +
           '<div class="field"><label class="flabel">Lần thứ</label><input type="text" id="cfgEdition" value="'+esc(c.eventEdition)+'"></div>' +
@@ -1230,7 +1342,40 @@
   }
 
   function bindAdminConfig(){
-    document.getElementById('linkDash').addEventListener('click', function(e){ e.preventDefault(); state.view='adminDashboard'; render(); });
+    var pendingBanner = state.config.bannerImageUrl || '';
+
+    var fileInput = document.getElementById('cfgBannerFile');
+    var uploadMsg = document.getElementById('bannerUploadMsg');
+    fileInput.addEventListener('change', async function(){
+      var file = fileInput.files && fileInput.files[0];
+      if(!file) return;
+      uploadMsg.style.display = 'block';
+      uploadMsg.textContent = 'Đang xử lý ảnh…';
+      try{
+        var dataUrl = await compressBannerFile(file);
+        if(!dataUrl){
+          uploadMsg.textContent = 'Ảnh vẫn còn khá lớn sau khi nén, vui lòng chọn ảnh khác đơn giản/nhỏ hơn.';
+          return;
+        }
+        pendingBanner = dataUrl;
+        var wrap = document.getElementById('bannerPreviewWrap');
+        var img = document.getElementById('bannerPreviewImg');
+        img.src = dataUrl;
+        wrap.style.display = '';
+        uploadMsg.textContent = 'Đã chọn ảnh mới, nhấn "Lưu thay đổi" để áp dụng.';
+      }catch(err){
+        uploadMsg.textContent = 'Không đọc được ảnh, vui lòng thử ảnh khác.';
+      }
+    });
+
+    var btnRemoveBanner = document.getElementById('btnRemoveBanner');
+    if(btnRemoveBanner) btnRemoveBanner.addEventListener('click', function(){
+      pendingBanner = '';
+      document.getElementById('bannerPreviewWrap').style.display = 'none';
+      fileInput.value = '';
+      uploadMsg.style.display = 'block';
+      uploadMsg.textContent = 'Đã bỏ banner, sẽ dùng giao diện mặc định sau khi lưu.';
+    });
 
     document.getElementById('cfgForm').addEventListener('submit', async function(e){
       e.preventDefault();
@@ -1248,7 +1393,8 @@
         eventAudience: document.getElementById('cfgAudience').value.trim() || c.eventAudience,
         sessions: newSessions,
         registrationOpen: document.getElementById('cfgOpen').checked,
-        adminPassword: document.getElementById('cfgPassword').value.trim() || c.adminPassword
+        adminPassword: document.getElementById('cfgPassword').value.trim() || c.adminPassword,
+        bannerImageUrl: pendingBanner
       };
       var msg = document.getElementById('cfgMsg');
       try{
@@ -1258,7 +1404,7 @@
         state.adminPasswordCache = newCfg.adminPassword;
         msg.textContent = 'Đã lưu cấu hình.';
         msg.style.display='block';
-        setTimeout(function(){ state.view='adminDashboard'; render(); }, 500);
+        setTimeout(function(){ goTo('/admin/duyet'); }, 500);
       }catch(err){
         msg.textContent = 'Lưu thất bại, vui lòng thử lại.';
         msg.style.display='block';
@@ -1276,8 +1422,7 @@
     }
     try{
       await refreshAll();
-      state.view = 'register';
-      render();
+      syncRoute();
     }catch(e){
       state.view = 'loadError';
       render();

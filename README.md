@@ -30,7 +30,7 @@ Sau khi ai đó đăng ký lần đầu, Apps Script sẽ tự tạo 2 sheet con
 `Registrations` trong file Sheet — không cần tạo tay.
 
 > Đổi mật khẩu quản trị mặc định `sabeco2026` ngay sau khi có người đăng ký đầu
-> tiên: vào trang **Quản trị → Cấu hình giải** trên website và đổi mật khẩu mới.
+> tiên: vào trang **Quản trị → Quản lý giải đấu** trên website và đổi mật khẩu mới.
 
 ## Bước 2 — Gắn URL vào website
 
@@ -79,8 +79,10 @@ Gửi link này cho cả team là dùng được ngay — không cần cài gì 
 - Mỗi lần sửa `index.html` (đổi màu, đổi chữ, thêm trường...), chỉ cần
   `git add . && git commit -m "..." && git push` — GitHub Pages tự cập nhật
   sau khoảng 1 phút.
-- Đổi tên giải / ngày thi đấu / mục đích / thể thức / mở-đóng đăng ký: làm
-  ngay trên website ở **Quản trị → Cấu hình giải**, không cần sửa code.
+- Đổi tên giải / ngày thi đấu / mục đích / thể thức / mở-đóng đăng ký / banner
+  sự kiện: làm ngay trên website ở **Quản trị → Quản lý giải đấu**, không cần
+  sửa code. Banner upload sẽ tự nén ảnh nhỏ gọn trước khi lưu (do cấu hình
+  được lưu chung 1 ô trong Google Sheet, giới hạn ~50.000 ký tự).
 - Muốn xem/sửa dữ liệu thô: mở thẳng Google Sheet đã tạo ở Bước 1, có 2 sheet
   `Config` và `Registrations`.
 
