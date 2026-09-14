@@ -226,29 +226,39 @@
     line-height:1.55;
   }
 
-  /* ---------- Participants preview (register page) ---------- */
-  .participants-strip{
-    display:flex; align-items:center; flex-wrap:wrap; gap:16px;
-    background:#fff;
-    border:1px solid rgba(31,107,74,0.18);
-    border-radius:8px;
-    padding:16px 20px;
-    margin-bottom:24px;
-  }
-  .avatar-stack{ display:flex; }
+  /* ---------- Avatar ---------- */
   .avatar-bubble{
     width:36px; height:36px;
     border-radius:50%;
     display:flex; align-items:center; justify-content:center;
     color:#fff; font-weight:800; font-size:13px;
     border:2px solid #fff;
-    margin-left:-10px;
     box-shadow:0 2px 4px rgba(0,0,0,0.12);
+    flex-shrink:0;
   }
-  .avatar-stack .avatar-bubble:first-child{ margin-left:0; }
-  .avatar-bubble.avatar-more{ background:#8B9990; }
-  .participants-text{ font-size:14.5px; color:var(--ink); flex:1; min-width:160px; }
-  .participants-text strong{ font-size:19px; color:var(--court-dark); }
+
+  /* ---------- Countdown ---------- */
+  .countdown-strip{
+    background:linear-gradient(135deg, var(--court-dark) 0%, var(--court) 100%);
+    color:var(--line);
+    border-radius:10px;
+    padding:16px 20px;
+    display:flex; align-items:center; justify-content:center; gap:18px; flex-wrap:wrap;
+    margin-bottom:20px;
+    box-shadow:0 6px 18px rgba(18,35,28,0.18);
+  }
+  .countdown-label{ font-weight:800; font-size:13.5px; color:var(--ball); white-space:nowrap; }
+  .countdown-numbers{ display:flex; gap:10px; }
+  .cd-unit{ text-align:center; min-width:50px; }
+  .cd-num{
+    font-size:22px; font-weight:900;
+    background:rgba(246,242,231,0.14);
+    border-radius:6px;
+    padding:6px 4px;
+    font-variant-numeric:tabular-nums;
+  }
+  .cd-lbl{ font-size:10.5px; margin-top:4px; opacity:0.85; }
+  .countdown-ended{ font-weight:700; color:var(--ball); font-size:14px; }
 
   /* ---------- Dashboard hero (public list) ---------- */
   .dash-hero{
@@ -589,7 +599,8 @@
       eventAudience: "Sẽ xác nhận sau",
       registrationOpen: true,
       adminPassword: "sabeco2026",
-      bannerImageUrl: ""
+      bannerImageUrl: "",
+      registrationDeadline: "2026-09-17T23:59"
     };
   }
 
@@ -727,6 +738,114 @@
     return '<div class="avatar-bubble" style="background:' + avatarColorFor(name) + ';" title="' + esc(name) + '">' + esc(initials(name)) + '</div>';
   }
 
+  // ====== ĐẾM NGƯỢC HẠN ĐĂNG KÝ ======
+  function pad2(n){ return String(n).padStart(2, '0'); }
+
+  function countdownNumbersHTML(target){
+    var diff = target.getTime() - Date.now();
+    if(isNaN(target.getTime()) || diff <= 0){
+      return '<div class="countdown-ended">🔒 Đã hết hạn đăng ký</div>';
+    }
+    var sec = Math.floor(diff / 1000);
+    var days = Math.floor(sec / 86400); sec -= days * 86400;
+    var hours = Math.floor(sec / 3600); sec -= hours * 3600;
+    var mins = Math.floor(sec / 60); sec -= mins * 60;
+    function unit(val, label){
+      return '<div class="cd-unit"><div class="cd-num">' + pad2(val) + '</div><div class="cd-lbl">' + label + '</div></div>';
+    }
+    return unit(days, 'Ngày') + unit(hours, 'Giờ') + unit(mins, 'Phút') + unit(sec, 'Giây');
+  }
+
+  function countdownStripHTML(c){
+    var target = new Date(c.registrationDeadline || '');
+    if(isNaN(target.getTime())) return '';
+    return '' +
+      '<div class="countdown-strip" id="countdownStrip" data-deadline="' + target.getTime() + '">' +
+        '<div class="countdown-label">⏰ Hạn chót đăng ký</div>' +
+        '<div class="countdown-numbers" id="countdownNumbers">' + countdownNumbersHTML(target) + '</div>' +
+      '</div>';
+  }
+
+  var countdownTimerId = null;
+
+  function bindCountdown(){
+    var box = document.getElementById('countdownStrip');
+    if(countdownTimerId){ clearInterval(countdownTimerId); countdownTimerId = null; }
+    if(!box) return;
+    var target = new Date(parseInt(box.getAttribute('data-deadline'), 10));
+    countdownTimerId = setInterval(function(){
+      var el = document.getElementById('countdownNumbers');
+      if(!el){ clearInterval(countdownTimerId); countdownTimerId = null; return; }
+      el.innerHTML = countdownNumbersHTML(target);
+    }, 1000);
+  }
+
+  function toDatetimeLocalValue(iso){
+    var d = new Date(iso || '');
+    if(isNaN(d.getTime())) return '';
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) + 'T' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  }
+
+  // ====== TỔNG QUAN NGƯỜI THAM DỰ ĐÃ DUYỆT ======
+  function approvedStatsAndCards(){
+    var c = state.config;
+    var approved = state.registrations.filter(function(r){ return r.status === 'approved'; });
+    var perSession = {};
+    c.sessions.forEach(function(s){ perSession[s.id] = 0; });
+    approved.forEach(function(r){
+      (r.sessions || []).forEach(function(sid){ if(perSession[sid] !== undefined) perSession[sid]++; });
+    });
+    return { approved: approved, perSession: perSession };
+  }
+
+  var STAT_BORDER_COLORS = ['var(--court)', 'var(--coral)', 'var(--sky)', 'var(--plum)', 'var(--gold)'];
+
+  function statCardsHTML(approvedCount, perSession, sessions){
+    return '<div class="stat" style="border-left-color:var(--gold);"><div class="num">' + approvedCount + '</div><div class="lbl">🎉 Tổng đồng đội đã duyệt</div></div>' +
+      sessions.map(function(s, idx){
+        return '<div class="stat" style="border-left-color:' + STAT_BORDER_COLORS[idx % STAT_BORDER_COLORS.length] + ';"><div class="num">' + (perSession[s.id] || 0) + '</div><div class="lbl">📅 ' + esc(s.label) + '</div></div>';
+      }).join('');
+  }
+
+  function sessionTabsHTML(activeFilter, sessions){
+    return '<button class="btn-outline listtab" data-sess="all" style="' + (activeFilter === 'all' ? 'background:rgba(31,107,74,0.1);' : '') + '">Tất cả</button>' +
+      sessions.map(function(s){
+        return '<button class="btn-outline listtab" data-sess="' + esc(s.id) + '" style="' + (activeFilter === s.id ? 'background:rgba(31,107,74,0.1);' : '') + '">' + esc(s.label) + '</button>';
+      }).join('');
+  }
+
+  function attendeeCardsHTML(approved, filterSessions, sessions){
+    var shown = approved;
+    if(filterSessions !== 'all'){
+      shown = approved.filter(function(r){ return (r.sessions || []).indexOf(filterSessions) !== -1; });
+    }
+    shown = shown.slice().sort(function(a, b){ return a.hoTen.localeCompare(b.hoTen, 'vi'); });
+    var cards = shown.map(function(r){
+      var sessLabels = (r.sessions || []).map(function(sid){
+        var found = sessions.find(function(s){ return s.id === sid; });
+        return found ? found.label : sid;
+      });
+      return '<div class="attendee-card">' +
+        avatarBubble(r.hoTen) +
+        '<div class="info">' +
+          '<div class="name">' + esc(r.hoTen) + '</div>' +
+          '<div class="unit">' + esc(r.donVi) + '</div>' +
+          '<div class="pills">' + sessLabels.map(function(l){ return '<span class="pill">' + esc(l) + '</span>'; }).join('') + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    if(!cards){
+      cards = '<div class="empty-dash">Chưa có ai được duyệt tham dự' + (filterSessions !== 'all' ? ' cho ngày này' : '') + ' — hãy là người đầu tiên! 🎉</div>';
+    }
+    return cards;
+  }
+
+  function bindSessionTabs(){
+    Array.prototype.forEach.call(document.querySelectorAll('.listtab'), function(btn){
+      btn.addEventListener('click', function(){ state.listFilterSession = btn.getAttribute('data-sess'); render(); });
+    });
+  }
+
   var MAX_BANNER_BASE64_CHARS = 40000;
 
   function compressImageFile(file, maxWidth, quality){
@@ -814,19 +933,19 @@
       '</div>';
   }
 
-  function participantsPreviewHTML(){
-    var approved = state.registrations.filter(function(r){ return r.status === 'approved'; });
-    var total = approved.length;
-    if(total === 0) return '';
-    var shown = approved.slice(0, 8);
-    var avatarsHTML = shown.map(function(r){ return avatarBubble(r.hoTen); }).join('');
-    var extra = total > shown.length ? '<div class="avatar-bubble avatar-more">+' + (total - shown.length) + '</div>' : '';
+  function registrationOverviewHTML(){
+    var c = state.config;
+    var data = approvedStatsAndCards();
+    var filterSessions = state.listFilterSession;
     return '' +
       '<div class="wrap" style="padding-bottom:0;">' +
-        '<div class="participants-strip">' +
-          '<div class="avatar-stack">' + avatarsHTML + extra + '</div>' +
-          '<div class="participants-text"><strong>' + total + '</strong> đồng đội đã đăng ký tham gia! 🎉</div>' +
-          '<a href="#/danh-sach" class="btn btn-outline" style="white-space:nowrap;">Xem danh sách →</a>' +
+        countdownStripHTML(c) +
+        '<div class="card">' +
+          '<h2 style="margin-bottom:2px;">🏆 Đội hình giao lưu</h2>' +
+          '<p class="lead">Những đồng đội đã được duyệt tham dự — cập nhật trực tiếp, khỏi cần bấm qua trang khác.</p>' +
+          '<div class="stat-grid" style="margin-bottom:18px;">' + statCardsHTML(data.approved.length, data.perSession, c.sessions) + '</div>' +
+          '<div class="toolbar" style="margin-bottom:16px;">' + sessionTabsHTML(filterSessions, c.sessions) + '</div>' +
+          '<div class="attendee-grid">' + attendeeCardsHTML(data.approved, filterSessions, c.sessions) + '</div>' +
         '</div>' +
       '</div>';
   }
@@ -931,13 +1050,16 @@
 
     return '' +
       bannerHTML() +
+      registrationOverviewHTML() +
+      '<div class="wrap">' + body + '</div>' +
       infoSectionHTML() +
-      participantsPreviewHTML() +
-      '<div class="wrap" style="padding-top:0;">' + body + '</div>' +
       '<footer class="site-foot">SABECO và những người bạn — ' + esc(c.eventEdition) + ' &nbsp;·&nbsp; <a href="#/danh-sach">Danh sách đã đăng ký</a> &nbsp;·&nbsp; <a href="#/admin">Quản trị</a></footer>';
   }
 
   function bindRegister(){
+    bindSessionTabs();
+    bindCountdown();
+
     var again = document.getElementById('btnAnother');
     if(again) again.addEventListener('click', function(){ state.lastCode=''; render(); });
 
@@ -993,68 +1115,28 @@
   // ---------------- Public approved list (dashboard) ----------------
   function renderPublicList(){
     var c = state.config;
-    var approved = state.registrations.filter(function(r){ return r.status === 'approved'; });
-
-    var perSession = {};
-    c.sessions.forEach(function(s){ perSession[s.id] = 0; });
-    approved.forEach(function(r){
-      (r.sessions||[]).forEach(function(sid){ if(perSession[sid]!==undefined) perSession[sid]++; });
-    });
-    var borderColors = ['var(--court)','var(--coral)','var(--sky)','var(--plum)','var(--gold)'];
-    var statCards = '<div class="stat" style="border-left-color:var(--gold);"><div class="num">'+approved.length+'</div><div class="lbl">🎉 Tổng đồng đội đã duyệt</div></div>' +
-      c.sessions.map(function(s, idx){
-        return '<div class="stat" style="border-left-color:'+borderColors[idx % borderColors.length]+';"><div class="num">'+(perSession[s.id]||0)+'</div><div class="lbl">📅 '+esc(s.label)+'</div></div>';
-      }).join('');
-
+    var data = approvedStatsAndCards();
     var filterSessions = state.listFilterSession;
-    var shown = approved;
-    if(filterSessions !== 'all'){
-      shown = approved.filter(function(r){ return (r.sessions||[]).indexOf(filterSessions) !== -1; });
-    }
-    shown = shown.slice().sort(function(a,b){ return a.hoTen.localeCompare(b.hoTen, 'vi'); });
-
-    var tabs = '<button class="btn-outline listtab" data-sess="all" style="'+(filterSessions==='all'?'background:rgba(31,107,74,0.1);':'')+'">Tất cả</button>' +
-      c.sessions.map(function(s){
-        return '<button class="btn-outline listtab" data-sess="'+esc(s.id)+'" style="'+(filterSessions===s.id?'background:rgba(31,107,74,0.1);':'')+'">'+esc(s.label)+'</button>';
-      }).join('');
-
-    var cards = shown.map(function(r){
-      var sessLabels = (r.sessions||[]).map(function(sid){
-        var found = c.sessions.find(function(s){ return s.id===sid; });
-        return found ? found.label : sid;
-      });
-      return '<div class="attendee-card">' +
-        avatarBubble(r.hoTen) +
-        '<div class="info">' +
-          '<div class="name">'+esc(r.hoTen)+'</div>' +
-          '<div class="unit">'+esc(r.donVi)+'</div>' +
-          '<div class="pills">'+ sessLabels.map(function(l){return '<span class="pill">'+esc(l)+'</span>';}).join('') +'</div>' +
-        '</div>' +
-      '</div>';
-    }).join('');
-    if(!cards){
-      cards = '<div class="empty-dash">Chưa có người đăng ký nào được duyệt'+(filterSessions!=='all'?' cho ngày này':'')+'.</div>';
-    }
 
     return '' +
       bannerHTML() +
       '<div class="wrap wide">' +
+        countdownStripHTML(c) +
         '<div class="dash-hero">' +
           '<div><h2 style="margin-bottom:2px;">🏆 Đội hình giao lưu</h2><p class="lead" style="border:none;padding:0;margin:0;">Những đồng đội đã được Ban tổ chức duyệt tham dự.</p></div>' +
         '</div>' +
-        '<div class="stat-grid">'+statCards+'</div>' +
+        '<div class="stat-grid">' + statCardsHTML(data.approved.length, data.perSession, c.sessions) + '</div>' +
         '<div class="card">' +
-          '<div class="toolbar" style="margin-bottom:16px;">' + tabs + '</div>' +
-          '<div class="attendee-grid">'+cards+'</div>' +
+          '<div class="toolbar" style="margin-bottom:16px;">' + sessionTabsHTML(filterSessions, c.sessions) + '</div>' +
+          '<div class="attendee-grid">' + attendeeCardsHTML(data.approved, filterSessions, c.sessions) + '</div>' +
         '</div>' +
       '</div>' +
       '<footer class="site-foot"><a href="#/">← Về trang đăng ký</a></footer>';
   }
 
   function bindPublicList(){
-    Array.prototype.forEach.call(document.querySelectorAll('.listtab'), function(btn){
-      btn.addEventListener('click', function(){ state.listFilterSession = btn.getAttribute('data-sess'); render(); });
-    });
+    bindSessionTabs();
+    bindCountdown();
   }
 
   function adminTabsHTML(active){
@@ -1325,6 +1407,8 @@
 
           sessionRows +
 
+          '<div class="field"><label class="flabel">⏰ Hạn chót đăng ký (hiển thị đếm ngược)</label><input type="datetime-local" id="cfgDeadline" value="'+esc(toDatetimeLocalValue(c.registrationDeadline))+'"></div>' +
+
           '<div class="toggle-row">' +
             '<input type="checkbox" id="cfgOpen" '+(c.registrationOpen?'checked':'')+'>' +
             '<label for="cfgOpen" style="font-size:14px;font-weight:600;">Đang mở đăng ký</label>' +
@@ -1394,7 +1478,8 @@
         sessions: newSessions,
         registrationOpen: document.getElementById('cfgOpen').checked,
         adminPassword: document.getElementById('cfgPassword').value.trim() || c.adminPassword,
-        bannerImageUrl: pendingBanner
+        bannerImageUrl: pendingBanner,
+        registrationDeadline: document.getElementById('cfgDeadline').value || c.registrationDeadline
       };
       var msg = document.getElementById('cfgMsg');
       try{
