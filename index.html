@@ -572,6 +572,27 @@
     .card{ padding:24px 18px; }
     .banner{ padding:40px 16px 34px; }
   }
+
+  .loading-screen{
+    flex:1;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:10px;
+    padding:60px 20px;
+    color:#4A5750;
+    text-align:center;
+  }
+  .loading-spinner{
+    width:34px; height:34px;
+    border:3px solid rgba(31,107,74,0.18);
+    border-top-color:var(--court);
+    border-radius:50%;
+    animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .loading-sub{ font-size:12.5px; color:#8A958E; }
+  @media (prefers-reduced-motion: reduce){
+    .loading-spinner{ animation:none; }
+  }
 </style>
 </head>
 <body>
@@ -694,6 +715,40 @@
     var data = await loadAll();
     state.config = data.config;
     state.registrations = data.registrations;
+    saveCache(state.config, state.registrations);
+  }
+
+  // ====== CACHE CỤC BỘ (hiện ngay dữ liệu lần trước trong khi tải bản mới) ======
+  var CACHE_KEY = 'sabeco_pb_cache_v1';
+
+  function loadCache(){
+    try{
+      var raw = localStorage.getItem(CACHE_KEY);
+      if(!raw) return null;
+      var parsed = JSON.parse(raw);
+      if(!parsed || !parsed.config) return null;
+      return parsed;
+    }catch(e){
+      return null;
+    }
+  }
+
+  function saveCache(config, registrations){
+    try{
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ config: config, registrations: registrations }));
+    }catch(e){
+      // bỏ qua nếu trình duyệt chặn localStorage (chế độ ẩn danh, hết quota...)
+    }
+  }
+
+  function registerFormHasInput(){
+    var form = document.getElementById('regForm');
+    if(!form) return false;
+    var texts = form.querySelectorAll('input[type=text], input[type=number]');
+    for(var i=0;i<texts.length;i++){
+      if(texts[i].value.trim() !== '') return true;
+    }
+    return form.querySelectorAll('input[type=radio]:checked, input[type=checkbox]:checked').length > 0;
   }
 
   function esc(s){
@@ -953,7 +1008,11 @@
   function render(){
     var app = document.getElementById('app');
     if(state.view === 'loading'){
-      app.innerHTML = '<div style="padding:60px;text-align:center;color:#4A5750;">Đang tải…</div>';
+      app.innerHTML = '<div class="loading-screen">' +
+        '<div class="loading-spinner"></div>' +
+        '<div>Đang kết nối máy chủ…</div>' +
+        '<div class="loading-sub">Lần tải đầu có thể mất vài giây, các lần sau sẽ nhanh hơn.</div>' +
+      '</div>';
       return;
     }
     if(state.view === 'setupNeeded'){
@@ -1499,12 +1558,30 @@
 
   // ---------------- Init ----------------
   async function init(){
-    state.view = 'loading'; render();
     if(!apiConfigured()){
       state.view = 'setupNeeded';
       render();
       return;
     }
+
+    var cached = loadCache();
+    if(cached){
+      // Hiện ngay dữ liệu lần trước để trang không bị trắng/chờ, rồi âm thầm lấy bản mới nhất.
+      state.config = cached.config;
+      state.registrations = cached.registrations;
+      syncRoute();
+      try{
+        await refreshAll();
+        if(state.view !== 'register' || !registerFormHasInput()){
+          render();
+        }
+      }catch(e){
+        // Giữ dữ liệu cache hiển thị, bỏ qua lỗi tải ngầm.
+      }
+      return;
+    }
+
+    state.view = 'loading'; render();
     try{
       await refreshAll();
       syncRoute();
