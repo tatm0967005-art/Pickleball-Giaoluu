@@ -16,6 +16,9 @@
     --ball:#D7DF23;
     --gold:#B58A3D;
     --danger:#B5432F;
+    --coral:#E8623D;
+    --sky:#2E86AB;
+    --plum:#8E4585;
     --radius:6px;
   }
   *{box-sizing:border-box;}
@@ -62,11 +65,46 @@
     opacity:0.16;
     transform:rotate(8deg);
     pointer-events:none;
+    animation:wiggle 6s ease-in-out infinite;
   }
   .banner-decor.left{
     top:auto; bottom:-40px; left:-30px; right:auto;
     transform:rotate(-16deg);
     width:140px; height:140px;
+    animation:wiggle 7s ease-in-out infinite reverse;
+  }
+  @keyframes wiggle{
+    0%,100%{ transform:rotate(8deg) translateY(0); }
+    50%{ transform:rotate(14deg) translateY(-8px); }
+  }
+  .banner-decor.left{ animation-name:wiggleLeft; }
+  @keyframes wiggleLeft{
+    0%,100%{ transform:rotate(-16deg) translateY(0); }
+    50%{ transform:rotate(-22deg) translateY(-8px); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .banner-decor{ animation:none; }
+  }
+  .fun-sticker{
+    position:absolute;
+    top:18px; left:18px;
+    background:var(--coral);
+    color:#fff;
+    font-weight:800;
+    font-size:12px;
+    padding:7px 13px;
+    border-radius:999px;
+    transform:rotate(-8deg);
+    box-shadow:0 3px 0 rgba(0,0,0,0.15);
+    animation:pop 2.6s ease-in-out infinite;
+    z-index:2;
+  }
+  @keyframes pop{
+    0%,100%{ transform:rotate(-8deg) scale(1); }
+    50%{ transform:rotate(-4deg) scale(1.06); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .fun-sticker{ animation:none; }
   }
   .banner-inner{
     position:relative;
@@ -106,6 +144,14 @@
     vertical-align:-0.1em;
     margin:0 6px;
     color:var(--ball);
+    animation:spinBall 4s linear infinite;
+  }
+  @keyframes spinBall{
+    0%{ transform:rotate(0deg); }
+    100%{ transform:rotate(360deg); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .banner .ball-icon{ animation:none; }
   }
   .banner p.sub{
     margin:16px auto 0;
@@ -134,6 +180,8 @@
     background:var(--ball);
     flex-shrink:0;
   }
+  .chip:nth-child(2) .dot{ background:var(--coral); }
+  .chip:nth-child(3) .dot{ background:#7FD1E0; }
   .banner .status-line{
     margin-top:22px;
     font-size:13px;
@@ -154,7 +202,17 @@
     border-top:4px solid var(--gold);
     border-radius:4px;
     padding:18px 18px 20px;
+    transition:transform 0.18s ease, box-shadow 0.18s ease;
   }
+  .info-card:hover{
+    transform:translateY(-4px);
+    box-shadow:0 10px 20px rgba(18,35,28,0.1);
+  }
+  .info-card:nth-child(1){ border-top-color:var(--gold); }
+  .info-card:nth-child(2){ border-top-color:var(--coral); }
+  .info-card:nth-child(3){ border-top-color:var(--sky); }
+  .info-card:nth-child(4){ border-top-color:var(--plum); }
+  .info-card h3{ display:flex; align-items:center; gap:7px; }
   .info-card h3{
     margin:0 0 8px;
     font-size:14.5px;
@@ -167,6 +225,63 @@
     color:#3E4A43;
     line-height:1.55;
   }
+
+  /* ---------- Participants preview (register page) ---------- */
+  .participants-strip{
+    display:flex; align-items:center; flex-wrap:wrap; gap:16px;
+    background:#fff;
+    border:1px solid rgba(31,107,74,0.18);
+    border-radius:8px;
+    padding:16px 20px;
+    margin-bottom:24px;
+  }
+  .avatar-stack{ display:flex; }
+  .avatar-bubble{
+    width:36px; height:36px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-weight:800; font-size:13px;
+    border:2px solid #fff;
+    margin-left:-10px;
+    box-shadow:0 2px 4px rgba(0,0,0,0.12);
+  }
+  .avatar-stack .avatar-bubble:first-child{ margin-left:0; }
+  .avatar-bubble.avatar-more{ background:#8B9990; }
+  .participants-text{ font-size:14.5px; color:var(--ink); flex:1; min-width:160px; }
+  .participants-text strong{ font-size:19px; color:var(--court-dark); }
+
+  /* ---------- Dashboard hero (public list) ---------- */
+  .dash-hero{
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px;
+    margin-bottom:18px;
+  }
+  .dash-hero .dash-count{ font-size:15px; color:#4A5750; }
+  .dash-hero .dash-count strong{ font-size:26px; color:var(--court-dark); display:block; }
+
+  .attendee-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(240px,1fr));
+    gap:14px;
+  }
+  .attendee-card{
+    display:flex; align-items:center; gap:12px;
+    background:#fff;
+    border:1px solid rgba(31,107,74,0.18);
+    border-radius:6px;
+    padding:14px 16px;
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .attendee-card:hover{
+    transform:translateY(-3px);
+    box-shadow:0 8px 16px rgba(18,35,28,0.1);
+  }
+  .attendee-card .avatar-bubble{ width:42px; height:42px; font-size:14px; margin-left:0; flex-shrink:0; }
+  .attendee-card .info{ min-width:0; }
+  .attendee-card .info .name{ font-weight:700; font-size:14.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .attendee-card .info .unit{ font-size:12.5px; color:#6B776F; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .attendee-card .info .pills{ margin-top:4px; }
+  .attendee-card .info .pills .pill{ font-size:11px; padding:1px 7px; }
+  .empty-dash{ text-align:center; color:#7C877F; padding:40px 14px; }
 
   /* ---------- Layout wrappers ---------- */
   .wrap{
@@ -253,11 +368,13 @@
     min-width:90px;
     justify-content:center;
   }
+  .choice .box{ transition:transform 0.12s ease, background 0.12s ease, border-color 0.12s ease; }
   .choice input:checked + .box{
     border-color:var(--court);
     background:rgba(31,107,74,0.08);
     color:var(--court);
     font-weight:700;
+    transform:scale(1.05);
   }
   .choice input:focus-visible + .box{
     outline:2px solid var(--court); outline-offset:2px;
@@ -274,12 +391,15 @@
     font-size:15px;
   }
   .btn-primary{
-    background:var(--ball);
+    background:linear-gradient(135deg, var(--ball) 0%, #c7cf1a 100%);
     color:var(--court-dark);
     width:100%;
+    box-shadow:0 4px 0 rgba(0,0,0,0.15);
+    transition:transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
   }
-  .btn-primary:hover{ filter:brightness(0.96); }
-  .btn-primary:disabled{ opacity:0.5; cursor:not-allowed; }
+  .btn-primary:hover{ filter:brightness(1.03); transform:translateY(-2px); box-shadow:0 6px 0 rgba(0,0,0,0.15); }
+  .btn-primary:active{ transform:translateY(1px); box-shadow:0 2px 0 rgba(0,0,0,0.15); }
+  .btn-primary:disabled{ opacity:0.5; cursor:not-allowed; transform:none; box-shadow:0 4px 0 rgba(0,0,0,0.15); }
   .btn-outline{
     background:transparent;
     border:1.5px solid var(--court);
@@ -306,9 +426,32 @@
   .success{
     text-align:center;
     padding:10px 4px 4px;
+    position:relative;
+    overflow:hidden;
   }
   .success .check{
     width:56px; height:56px; margin:0 auto 16px;
+    animation:popCheck 0.5s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  @keyframes popCheck{
+    from{ transform:scale(0.3); opacity:0; }
+    to{ transform:scale(1); opacity:1; }
+  }
+  .confetti{
+    position:absolute;
+    top:-10px;
+    width:8px; height:8px;
+    border-radius:2px;
+    opacity:0.9;
+    animation:confettiFall 1.6s ease-in forwards;
+  }
+  @keyframes confettiFall{
+    0%{ transform:translateY(0) rotate(0deg); opacity:1; }
+    100%{ transform:translateY(160px) rotate(300deg); opacity:0; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .success .check{ animation:none; }
+    .confetti{ display:none; }
   }
   .success h2{ margin-bottom:8px; }
   .success p{ color:#4A5750; font-size:14.5px; }
@@ -498,10 +641,43 @@
       '</svg>';
   }
 
+  var AVATAR_PALETTE = ['#1F6B4A','#E8623D','#2E86AB','#8E4585','#B58A3D','#153B29'];
+
+  function avatarColorFor(str){
+    str = String(str || '');
+    var hash = 0;
+    for(var i=0;i<str.length;i++){ hash = (hash * 31 + str.charCodeAt(i)) >>> 0; }
+    return AVATAR_PALETTE[hash % AVATAR_PALETTE.length];
+  }
+
+  function initials(name){
+    var parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+    if(parts.length === 0) return '?';
+    if(parts.length === 1) return parts[0].slice(0,2).toUpperCase();
+    return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+  }
+
+  function avatarBubble(name){
+    return '<div class="avatar-bubble" style="background:' + avatarColorFor(name) + ';" title="' + esc(name) + '">' + esc(initials(name)) + '</div>';
+  }
+
+  function confettiHTML(){
+    var colors = ['#D7DF23','#E8623D','#2E86AB','#8E4585','#B58A3D'];
+    var pieces = '';
+    for(var i=0;i<16;i++){
+      var left = Math.round(Math.random()*100);
+      var delay = (Math.random()*0.4).toFixed(2);
+      var color = colors[i % colors.length];
+      pieces += '<span class="confetti" style="left:' + left + '%;background:' + color + ';animation-delay:' + delay + 's;"></span>';
+    }
+    return pieces;
+  }
+
   function bannerHTML(){
     var c = state.config;
     return '' +
       '<div class="banner">' +
+        '<div class="fun-sticker">🎉 Vui là chính!</div>' +
         '<div class="banner-decor">' + paddlesSVG() + '</div>' +
         '<div class="banner-decor left">' + paddlesSVG() + '</div>' +
         '<div class="kitchen-line"></div>' +
@@ -525,10 +701,27 @@
     return '' +
       '<div class="wrap info-wrap">' +
         '<div class="info-grid">' +
-          '<div class="info-card"><h3>Mục đích giải đấu</h3><p>' + esc(c.eventPurpose) + '</p></div>' +
-          '<div class="info-card"><h3>Thể thức thi đấu</h3><p>' + esc(c.eventFormat) + '</p></div>' +
-          '<div class="info-card"><h3>Đối tượng tham gia</h3><p>' + esc(c.eventAudience) + '</p></div>' +
-          '<div class="info-card"><h3>Thời gian tổ chức</h3><p>' + timeText + '</p></div>' +
+          '<div class="info-card"><h3>🎯 Mục đích giải đấu</h3><p>' + esc(c.eventPurpose) + '</p></div>' +
+          '<div class="info-card"><h3>🏆 Thể thức thi đấu</h3><p>' + esc(c.eventFormat) + '</p></div>' +
+          '<div class="info-card"><h3>👥 Đối tượng tham gia</h3><p>' + esc(c.eventAudience) + '</p></div>' +
+          '<div class="info-card"><h3>🗓️ Thời gian tổ chức</h3><p>' + timeText + '</p></div>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function participantsPreviewHTML(){
+    var approved = state.registrations.filter(function(r){ return r.status === 'approved'; });
+    var total = approved.length;
+    if(total === 0) return '';
+    var shown = approved.slice(0, 8);
+    var avatarsHTML = shown.map(function(r){ return avatarBubble(r.hoTen); }).join('');
+    var extra = total > shown.length ? '<div class="avatar-bubble avatar-more">+' + (total - shown.length) + '</div>' : '';
+    return '' +
+      '<div class="wrap" style="padding-bottom:0;">' +
+        '<div class="participants-strip">' +
+          '<div class="avatar-stack">' + avatarsHTML + extra + '</div>' +
+          '<div class="participants-text"><strong>' + total + '</strong> đồng đội đã đăng ký tham gia! 🎉</div>' +
+          '<a href="#" id="linkSeeListStrip" class="btn btn-outline" style="white-space:nowrap;">Xem danh sách →</a>' +
         '</div>' +
       '</div>';
   }
@@ -571,8 +764,9 @@
       body = '' +
         '<div class="card">' +
           '<div class="success">' +
+            confettiHTML() +
             '<svg class="check" viewBox="0 0 52 52"><circle cx="26" cy="26" r="25" fill="none" stroke="#1F6B4A" stroke-width="2"/><path fill="none" stroke="#1F6B4A" stroke-width="3" d="M14 27l8 8 16-16"/></svg>' +
-            '<h2>Đăng ký thành công!</h2>' +
+            '<h2>Đăng ký thành công! 🏓</h2>' +
             '<p>Thông tin của bạn đang chờ Ban tổ chức duyệt. Sau khi được duyệt, bạn sẽ xuất hiện trong danh sách đăng ký công khai.</p>' +
             '<div class="code">' + esc(state.lastCode) + '</div>' +
           '</div>' +
@@ -591,21 +785,21 @@
       }).join('');
       body = '' +
         '<form class="card" id="regForm" novalidate>' +
-          '<h2>Đăng ký tham dự</h2>' +
-          '<p class="lead">Điền thông tin bên dưới để tham gia giao lưu.</p>' +
+          '<h2>Đăng ký tham dự 🏓</h2>' +
+          '<p class="lead">Điền thông tin bên dưới để tham gia giao lưu nhé!</p>' +
 
           '<div class="field">' +
-            '<label class="flabel">Họ tên</label>' +
+            '<label class="flabel">🙋 Họ tên</label>' +
             '<input type="text" name="hoTen" autocomplete="name" required>' +
           '</div>' +
 
           '<div class="field">' +
-            '<label class="flabel">Phòng ban / Công ty / Bạn giới thiệu</label>' +
+            '<label class="flabel">🏢 Phòng ban / Công ty / Bạn giới thiệu</label>' +
             '<input type="text" name="donVi" required>' +
           '</div>' +
 
           '<div class="field">' +
-            '<label class="flabel">Giới tính</label>' +
+            '<label class="flabel">🚻 Giới tính</label>' +
             '<div class="choice-row">' +
               '<label class="choice"><input type="radio" name="gioiTinh" value="Nam" required><span class="box">Nam</span></label>' +
               '<label class="choice"><input type="radio" name="gioiTinh" value="Nữ"><span class="box">Nữ</span></label>' +
@@ -614,26 +808,27 @@
           '</div>' +
 
           '<div class="field">' +
-            '<label class="flabel">Năm sinh</label>' +
+            '<label class="flabel">🎂 Năm sinh</label>' +
             '<input type="number" name="namSinh" min="1940" max="2015" placeholder="VD: 1990" required style="max-width:160px;">' +
           '</div>' +
 
           '<div class="field">' +
-            '<label class="flabel">Thời gian tham dự được</label>' +
+            '<label class="flabel">📅 Thời gian tham dự được</label>' +
             '<div class="choice-row session-row">' + sessionBoxes + '</div>' +
-            '<div class="hint">Có thể chọn một hoặc cả hai ngày.</div>' +
+            '<div class="hint">Có thể chọn một hoặc cả hai ngày nha.</div>' +
           '</div>' +
 
           '<div id="formErr" class="err" style="display:none;"></div>' +
 
-          '<button type="submit" class="btn btn-primary" id="btnSubmit">Đăng ký tham dự</button>' +
+          '<button type="submit" class="btn btn-primary" id="btnSubmit">🏓 Đăng ký tham dự</button>' +
         '</form>';
     }
 
     return '' +
       bannerHTML() +
       infoSectionHTML() +
-      '<div class="wrap">' + body + '</div>' +
+      participantsPreviewHTML() +
+      '<div class="wrap" style="padding-top:0;">' + body + '</div>' +
       '<footer class="site-foot">SABECO và những người bạn — ' + esc(c.eventEdition) + ' &nbsp;·&nbsp; <a href="#" id="linkSeeList2">Danh sách đã đăng ký</a> &nbsp;·&nbsp; <a href="#" id="linkAdmin">Quản trị</a></footer>';
   }
 
@@ -646,6 +841,9 @@
 
     var link3 = document.getElementById('linkSeeList');
     if(link3) link3.addEventListener('click', function(e){ e.preventDefault(); state.view='publicList'; render(); });
+
+    var linkStrip = document.getElementById('linkSeeListStrip');
+    if(linkStrip) linkStrip.addEventListener('click', function(e){ e.preventDefault(); state.view='publicList'; render(); });
 
     var again = document.getElementById('btnAnother');
     if(again) again.addEventListener('click', function(){ state.lastCode=''; render(); });
@@ -699,10 +897,21 @@
     });
   }
 
-  // ---------------- Public approved list ----------------
+  // ---------------- Public approved list (dashboard) ----------------
   function renderPublicList(){
     var c = state.config;
     var approved = state.registrations.filter(function(r){ return r.status === 'approved'; });
+
+    var perSession = {};
+    c.sessions.forEach(function(s){ perSession[s.id] = 0; });
+    approved.forEach(function(r){
+      (r.sessions||[]).forEach(function(sid){ if(perSession[sid]!==undefined) perSession[sid]++; });
+    });
+    var borderColors = ['var(--court)','var(--coral)','var(--sky)','var(--plum)','var(--gold)'];
+    var statCards = '<div class="stat" style="border-left-color:var(--gold);"><div class="num">'+approved.length+'</div><div class="lbl">🎉 Tổng đồng đội đã duyệt</div></div>' +
+      c.sessions.map(function(s, idx){
+        return '<div class="stat" style="border-left-color:'+borderColors[idx % borderColors.length]+';"><div class="num">'+(perSession[s.id]||0)+'</div><div class="lbl">📅 '+esc(s.label)+'</div></div>';
+      }).join('');
 
     var filterSessions = state.listFilterSession;
     var shown = approved;
@@ -716,35 +925,34 @@
         return '<button class="btn-outline listtab" data-sess="'+esc(s.id)+'" style="'+(filterSessions===s.id?'background:rgba(31,107,74,0.1);':'')+'">'+esc(s.label)+'</button>';
       }).join('');
 
-    var rows = shown.map(function(r, idx){
+    var cards = shown.map(function(r){
       var sessLabels = (r.sessions||[]).map(function(sid){
         var found = c.sessions.find(function(s){ return s.id===sid; });
         return found ? found.label : sid;
       });
-      return '<tr>' +
-        '<td>'+(idx+1)+'</td>' +
-        '<td>'+esc(r.hoTen)+'</td>' +
-        '<td>'+esc(r.donVi)+'</td>' +
-        '<td>'+ sessLabels.map(function(l){return '<span class="pill">'+esc(l)+'</span>';}).join('') +'</td>' +
-      '</tr>';
+      return '<div class="attendee-card">' +
+        avatarBubble(r.hoTen) +
+        '<div class="info">' +
+          '<div class="name">'+esc(r.hoTen)+'</div>' +
+          '<div class="unit">'+esc(r.donVi)+'</div>' +
+          '<div class="pills">'+ sessLabels.map(function(l){return '<span class="pill">'+esc(l)+'</span>';}).join('') +'</div>' +
+        '</div>' +
+      '</div>';
     }).join('');
-    if(!rows){
-      rows = '<tr class="empty-row"><td colspan="4">Chưa có người đăng ký nào được duyệt'+(filterSessions!=='all'?' cho ngày này':'')+'.</td></tr>';
+    if(!cards){
+      cards = '<div class="empty-dash">Chưa có người đăng ký nào được duyệt'+(filterSessions!=='all'?' cho ngày này':'')+'.</div>';
     }
 
     return '' +
       bannerHTML() +
       '<div class="wrap wide">' +
-        '<div class="card" style="margin-top:6px;">' +
-          '<h2>Danh sách đã đăng ký</h2>' +
-          '<p class="lead">Danh sách những người đã được Ban tổ chức duyệt tham dự.</p>' +
+        '<div class="dash-hero">' +
+          '<div><h2 style="margin-bottom:2px;">🏆 Đội hình giao lưu</h2><p class="lead" style="border:none;padding:0;margin:0;">Những đồng đội đã được Ban tổ chức duyệt tham dự.</p></div>' +
+        '</div>' +
+        '<div class="stat-grid">'+statCards+'</div>' +
+        '<div class="card">' +
           '<div class="toolbar" style="margin-bottom:16px;">' + tabs + '</div>' +
-          '<div class="table-wrap">' +
-            '<table>' +
-              '<thead><tr><th>#</th><th>Họ tên</th><th>Phòng ban/Công ty/Giới thiệu</th><th>Ngày tham dự</th></tr></thead>' +
-              '<tbody>'+rows+'</tbody>' +
-            '</table>' +
-          '</div>' +
+          '<div class="attendee-grid">'+cards+'</div>' +
         '</div>' +
       '</div>' +
       '<footer class="site-foot"><a href="#" id="linkBackReg">← Về trang đăng ký</a></footer>';
