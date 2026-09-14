@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SABECO và những người bạn - Lần 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12231C;
+    --court:#1F6B4A;
+    --court-dark:#153B29;
+    --line:#F6F2E7;
+    --ball:#D7DF23;
+    --gold:#B58A3D;
+    --danger:#B5432F;
+    --radius:6px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--line);
+    color:var(--ink);
+    font-family:'Be Vietnam Pro', sans-serif;
+    line-height:1.5;
+    min-height:100vh;
+  }
+  #app{min-height:100vh; display:flex; flex-direction:column;}
+
+  /* ---------- Banner ---------- */
+  .banner{
+    position:relative;
+    background:
+      repeating-linear-gradient(135deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 46px),
+      linear-gradient(160deg, var(--court) 0%, var(--court-dark) 100%);
+    color:var(--line);
+    padding:64px 24px 40px;
+    text-align:center;
+    overflow:hidden;
+    border-bottom:6px solid var(--ball);
+  }
+  .banner::before{
+    content:"";
+    position:absolute;
+    inset:14px;
+    border:2px dashed rgba(246,242,231,0.35);
+    pointer-events:none;
+  }
+  .banner .kitchen-line{
+    position:absolute;
+    left:14px; right:14px; top:50%;
+    height:2px;
+    background:rgba(246,242,231,0.18);
+    pointer-events:none;
+  }
+  .banner-decor{
+    position:absolute;
+    top:-30px; right:-22px;
+    width:170px; height:170px;
+    opacity:0.16;
+    transform:rotate(8deg);
+    pointer-events:none;
+  }
+  .banner-decor.left{
+    top:auto; bottom:-40px; left:-30px; right:auto;
+    transform:rotate(-16deg);
+    width:140px; height:140px;
+  }
+  .banner-inner{
+    position:relative;
+    animation:bannerRise 0.7s ease-out both;
+  }
+  @keyframes bannerRise{
+    from{ opacity:0; transform:translateY(14px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .banner-inner{ animation:none; }
+  }
+  .tag{
+    display:inline-block;
+    background:var(--gold);
+    color:var(--ink);
+    font-weight:700;
+    font-size:12px;
+    letter-spacing:0.03em;
+    padding:5px 14px;
+    border-radius:999px;
+    margin-bottom:20px;
+  }
+  .banner h1{
+    margin:0;
+    font-weight:900;
+    font-size:clamp(30px, 6vw, 58px);
+    line-height:1.04;
+    text-transform:uppercase;
+    max-width:760px;
+    margin:0 auto;
+    text-shadow:0 2px 0 rgba(0,0,0,0.12);
+  }
+  .banner .ball-icon{
+    display:inline-block;
+    width:1em; height:1em;
+    vertical-align:-0.1em;
+    margin:0 6px;
+    color:var(--ball);
+  }
+  .banner p.sub{
+    margin:16px auto 0;
+    font-size:clamp(15px, 2.2vw, 19px);
+    font-weight:500;
+    color:var(--ball);
+    max-width:560px;
+  }
+  .chip-strip{
+    display:flex; flex-wrap:wrap; justify-content:center; gap:10px;
+    margin:26px auto 0;
+    max-width:600px;
+  }
+  .chip{
+    display:inline-flex; align-items:center; gap:7px;
+    background:rgba(246,242,231,0.12);
+    border:1px solid rgba(246,242,231,0.3);
+    color:var(--line);
+    font-size:13px;
+    font-weight:600;
+    padding:8px 15px;
+    border-radius:999px;
+  }
+  .chip .dot{
+    width:7px; height:7px; border-radius:50%;
+    background:var(--ball);
+    flex-shrink:0;
+  }
+  .banner .status-line{
+    margin-top:22px;
+    font-size:13px;
+    color:rgba(246,242,231,0.75);
+  }
+
+  /* ---------- Info section ---------- */
+  .info-wrap{ padding-top:34px; padding-bottom:0; }
+  .info-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(210px,1fr));
+    gap:14px;
+    margin-bottom:8px;
+  }
+  .info-card{
+    background:#fff;
+    border:1px solid rgba(31,107,74,0.18);
+    border-top:4px solid var(--gold);
+    border-radius:4px;
+    padding:18px 18px 20px;
+  }
+  .info-card h3{
+    margin:0 0 8px;
+    font-size:14.5px;
+    font-weight:800;
+    color:var(--court-dark);
+  }
+  .info-card p{
+    margin:0;
+    font-size:13.5px;
+    color:#3E4A43;
+    line-height:1.55;
+  }
+
+  /* ---------- Layout wrappers ---------- */
+  .wrap{
+    flex:1;
+    width:100%;
+    max-width:640px;
+    margin:0 auto;
+    padding:36px 20px 60px;
+  }
+  .wrap.wide{ max-width:980px; }
+
+  /* ---------- Card / form ---------- */
+  .card{
+    background:#fff;
+    border:1px solid rgba(31,107,74,0.18);
+    border-radius:var(--radius);
+    padding:30px 26px;
+  }
+  .card h2{
+    margin:0 0 4px;
+    font-size:22px;
+    font-weight:800;
+  }
+  .card .lead{
+    margin:0 0 22px;
+    color:#4A5750;
+    font-size:14.5px;
+    border-bottom:2px solid var(--gold);
+    padding-bottom:18px;
+  }
+  .field{ margin-bottom:20px; }
+  .field label.flabel{
+    display:block;
+    font-weight:600;
+    font-size:14px;
+    margin-bottom:7px;
+  }
+  .field .hint{ font-size:12.5px; color:#6B776F; margin-top:5px; }
+  input[type=text], input[type=number]{
+    width:100%;
+    padding:11px 12px;
+    border:1.5px solid #C9D2CC;
+    border-radius:4px;
+    font-size:15px;
+    font-family:inherit;
+    background:#fff;
+    color:var(--ink);
+  }
+  input[type=text]:focus, input[type=number]:focus{
+    outline:none;
+    border-color:var(--court);
+    box-shadow:0 0 0 3px rgba(31,107,74,0.12);
+  }
+  textarea{
+    width:100%;
+    padding:11px 12px;
+    border:1.5px solid #C9D2CC;
+    border-radius:4px;
+    font-size:14.5px;
+    font-family:inherit;
+    background:#fff;
+    color:var(--ink);
+    resize:vertical;
+    min-height:78px;
+  }
+  textarea:focus{
+    outline:none;
+    border-color:var(--court);
+    box-shadow:0 0 0 3px rgba(31,107,74,0.12);
+  }
+  .choice-row{ display:flex; flex-wrap:wrap; gap:10px; }
+  .choice{
+    position:relative;
+  }
+  .choice input{ position:absolute; opacity:0; inset:0; cursor:pointer; margin:0; width:100%; height:100%; }
+  .choice .box{
+    display:flex; align-items:center; gap:8px;
+    border:1.5px solid #C9D2CC;
+    border-radius:4px;
+    padding:10px 14px;
+    font-size:14.5px;
+    font-weight:500;
+    background:#fff;
+    min-width:90px;
+    justify-content:center;
+  }
+  .choice input:checked + .box{
+    border-color:var(--court);
+    background:rgba(31,107,74,0.08);
+    color:var(--court);
+    font-weight:700;
+  }
+  .choice input:focus-visible + .box{
+    outline:2px solid var(--court); outline-offset:2px;
+  }
+  .session-row .choice .box{ min-width:150px; }
+
+  button{ font-family:inherit; cursor:pointer; }
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    border:none;
+    border-radius:4px;
+    padding:13px 22px;
+    font-weight:700;
+    font-size:15px;
+  }
+  .btn-primary{
+    background:var(--ball);
+    color:var(--court-dark);
+    width:100%;
+  }
+  .btn-primary:hover{ filter:brightness(0.96); }
+  .btn-primary:disabled{ opacity:0.5; cursor:not-allowed; }
+  .btn-outline{
+    background:transparent;
+    border:1.5px solid var(--court);
+    color:var(--court);
+  }
+  .btn-ghost{
+    background:transparent;
+    border:none;
+    color:#4A5750;
+    text-decoration:underline;
+    font-size:13px;
+    padding:6px 0;
+  }
+  .btn-danger{
+    background:transparent;
+    border:1.5px solid var(--danger);
+    color:var(--danger);
+    padding:6px 12px;
+    font-size:13px;
+    border-radius:4px;
+  }
+  .err{ color:var(--danger); font-size:13px; margin-top:6px; }
+
+  .success{
+    text-align:center;
+    padding:10px 4px 4px;
+  }
+  .success .check{
+    width:56px; height:56px; margin:0 auto 16px;
+  }
+  .success h2{ margin-bottom:8px; }
+  .success p{ color:#4A5750; font-size:14.5px; }
+  .success .code{
+    display:inline-block;
+    margin-top:14px;
+    font-weight:800;
+    letter-spacing:0.06em;
+    background:rgba(31,107,74,0.08);
+    color:var(--court);
+    padding:8px 16px;
+    border-radius:4px;
+  }
+
+  footer.site-foot{
+    text-align:center;
+    padding:18px 20px 26px;
+    font-size:12.5px;
+    color:#7C877F;
+  }
+  footer.site-foot a{ color:#7C877F; }
+
+  /* ---------- Admin ---------- */
+  .admin-topbar{
+    background:var(--court-dark);
+    color:var(--line);
+    padding:16px 24px;
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;
+  }
+  .admin-topbar .title{ font-weight:800; font-size:16px; }
+  .admin-topbar nav{ display:flex; gap:16px; align-items:center; }
+  .admin-topbar a, .admin-topbar button.linklike{
+    color:var(--line); opacity:0.85; text-decoration:none; font-size:13.5px;
+    background:none; border:none; cursor:pointer; font-family:inherit;
+  }
+  .admin-topbar a:hover, .admin-topbar button.linklike:hover{ opacity:1; text-decoration:underline; }
+
+  .stat-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(150px,1fr));
+    gap:14px;
+    margin-bottom:26px;
+  }
+  .stat{
+    background:#fff;
+    border:1px solid rgba(31,107,74,0.18);
+    border-left:5px solid var(--court);
+    border-radius:4px;
+    padding:16px 18px;
+  }
+  .stat .num{ font-size:28px; font-weight:900; color:var(--court-dark); }
+  .stat .lbl{ font-size:12.5px; color:#5B665F; margin-top:2px; }
+
+  .toolbar{
+    display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;
+    margin-bottom:14px;
+  }
+  .toolbar input[type=text]{ max-width:260px; }
+  .table-wrap{
+    background:#fff;
+    border:1px solid rgba(31,107,74,0.18);
+    border-radius:4px;
+    overflow-x:auto;
+  }
+  table{ width:100%; border-collapse:collapse; font-size:13.5px; min-width:720px;}
+  th, td{ text-align:left; padding:11px 14px; border-bottom:1px solid #EAE6D9; white-space:nowrap;}
+  th{ background:#F6F2E7; font-weight:700; color:var(--ink); position:sticky; top:0;}
+  tr:last-child td{ border-bottom:none; }
+  .pill{
+    display:inline-block; padding:2px 9px; border-radius:999px; font-size:12px; font-weight:600;
+    background:rgba(31,107,74,0.1); color:var(--court-dark); margin:1px 3px 1px 0;
+  }
+  .empty-row td{ text-align:center; color:#7C877F; padding:34px 14px; }
+
+  .login-wrap{
+    max-width:380px; margin:60px auto; padding:0 20px;
+  }
+  .toggle-row{ display:flex; align-items:center; gap:10px; margin-bottom:20px; }
+  .toggle-row input{ width:18px; height:18px; }
+
+  @media (max-width:520px){
+    .card{ padding:24px 18px; }
+    .banner{ padding:40px 16px 34px; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  function uid(){
+    return 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+  }
+
+  function defaultConfig(){
+    return {
+      eventTitle: "SABECO và những người bạn",
+      eventEdition: "Lần 3",
+      eventSubtitle: "Giải giao lưu Pickleball nội bộ",
+      sessions: [
+        { id: "s1", label: "Ngày 04/10/2026" },
+        { id: "s2", label: "Ngày 18/10/2026" }
+      ],
+      eventPurpose: "Sẽ xác nhận sau",
+      eventFormat: "Sẽ xác nhận sau",
+      eventAudience: "Sẽ xác nhận sau",
+      registrationOpen: true,
+      adminPassword: "sabeco2026"
+    };
+  }
+
+  // ====== CẤU HÌNH BACKEND ======
+  // Dán URL Web App của Google Apps Script vào đây sau khi deploy (xem README.md).
+  var API_URL = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+
+  var state = {
+    view: 'loading',
+    config: null,
+    registrations: [],
+    isAdmin: false,
+    adminError: '',
+    formError: '',
+    lastCode: '',
+    search: '',
+    listFilterSession: 'all',
+    adminFilterStatus: 'all',
+    adminPasswordCache: '',
+    loadError: ''
+  };
+
+  function apiConfigured(){
+    return API_URL && API_URL.indexOf('PASTE_YOUR') === -1;
+  }
+
+  async function apiGetAll(){
+    var res = await fetch(API_URL, { method: 'GET' });
+    if(!res.ok) throw new Error('network');
+    return await res.json();
+  }
+
+  async function apiPost(payload){
+    var res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // tránh preflight CORS với Apps Script
+      body: JSON.stringify(payload)
+    });
+    if(!res.ok) throw new Error('network');
+    return await res.json();
+  }
+
+  async function loadAll(){
+    if(!apiConfigured()){
+      return { config: defaultConfig(), registrations: [] };
+    }
+    var data = await apiGetAll();
+    return { config: data.config || defaultConfig(), registrations: data.registrations || [] };
+  }
+
+  async function refreshAll(){
+    var data = await loadAll();
+    state.config = data.config;
+    state.registrations = data.registrations;
+  }
+
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function paddlesSVG(){
+    return '<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+      '<g transform="rotate(20 50 50)"><rect x="42" y="6" width="16" height="46" rx="8" fill="#F6F2E7"/><rect x="46" y="50" width="8" height="34" rx="3" fill="#F6F2E7"/></g>' +
+      '<g transform="rotate(-25 50 50)"><rect x="42" y="10" width="16" height="46" rx="8" fill="#D7DF23"/><rect x="46" y="54" width="8" height="30" rx="3" fill="#D7DF23"/></g>' +
+      '</svg>';
+  }
+
+  function ballIconSVG(){
+    return '<svg class="ball-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+      '<circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.95"/>' +
+      '<circle cx="8" cy="8" r="1.1" fill="#12231C"/><circle cx="15" cy="7" r="1.1" fill="#12231C"/>' +
+      '<circle cx="17" cy="13" r="1.1" fill="#12231C"/><circle cx="7" cy="15" r="1.1" fill="#12231C"/>' +
+      '<circle cx="12" cy="18" r="1.1" fill="#12231C"/><circle cx="12" cy="12" r="1.1" fill="#12231C"/>' +
+      '</svg>';
+  }
+
+  function bannerHTML(){
+    var c = state.config;
+    return '' +
+      '<div class="banner">' +
+        '<div class="banner-decor">' + paddlesSVG() + '</div>' +
+        '<div class="banner-decor left">' + paddlesSVG() + '</div>' +
+        '<div class="kitchen-line"></div>' +
+        '<div class="banner-inner">' +
+          '<span class="tag">Nội bộ SABECO</span>' +
+          '<h1>' + esc(c.eventTitle) + ballIconSVG() + esc(c.eventEdition) + '</h1>' +
+          '<p class="sub">' + esc(c.eventSubtitle) + '</p>' +
+          '<div class="chip-strip">' +
+            '<span class="chip"><span class="dot"></span>Đánh đồng đội</span>' +
+            '<span class="chip"><span class="dot"></span>Gắn kết toàn SABECO</span>' +
+            '<span class="chip"><span class="dot"></span>' + c.sessions.length + ' ngày thi đấu</span>' +
+          '</div>' +
+          '<div class="status-line">' + (c.registrationOpen ? 'Đăng ký đang mở' : 'Đăng ký hiện đã đóng') + '</div>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function infoSectionHTML(){
+    var c = state.config;
+    var timeText = c.sessions.map(function(s){ return s.label; }).join(' &nbsp;·&nbsp; ');
+    return '' +
+      '<div class="wrap info-wrap">' +
+        '<div class="info-grid">' +
+          '<div class="info-card"><h3>Mục đích giải đấu</h3><p>' + esc(c.eventPurpose) + '</p></div>' +
+          '<div class="info-card"><h3>Thể thức thi đấu</h3><p>' + esc(c.eventFormat) + '</p></div>' +
+          '<div class="info-card"><h3>Đối tượng tham gia</h3><p>' + esc(c.eventAudience) + '</p></div>' +
+          '<div class="info-card"><h3>Thời gian tổ chức</h3><p>' + timeText + '</p></div>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function render(){
+    var app = document.getElementById('app');
+    if(state.view === 'loading'){
+      app.innerHTML = '<div style="padding:60px;text-align:center;color:#4A5750;">Đang tải…</div>';
+      return;
+    }
+    if(state.view === 'setupNeeded'){
+      app.innerHTML = '<div class="wrap"><div class="card">' +
+        '<h2>Chưa kết nối dữ liệu</h2>' +
+        '<p class="lead">Trang này cần một URL Google Apps Script để lưu đăng ký. Mở file <code>index.html</code>, tìm dòng <code>API_URL</code> gần đầu thẻ &lt;script&gt; và dán URL Web App vào đó (xem hướng dẫn trong README.md), rồi tải lại trang.</p>' +
+        '</div></div>';
+      return;
+    }
+    if(state.view === 'loadError'){
+      app.innerHTML = '<div class="wrap"><div class="card">' +
+        '<h2>Không tải được dữ liệu</h2>' +
+        '<p class="lead">Không kết nối được tới máy chủ dữ liệu. Vui lòng kiểm tra lại URL API hoặc thử tải lại trang.</p>' +
+        '<button class="btn btn-outline" id="btnRetry">Thử lại</button>' +
+        '</div></div>';
+      var r = document.getElementById('btnRetry');
+      if(r) r.addEventListener('click', init);
+      return;
+    }
+    if(state.view === 'register'){ app.innerHTML = renderRegister(); bindRegister(); return; }
+    if(state.view === 'publicList'){ app.innerHTML = renderPublicList(); bindPublicList(); return; }
+    if(state.view === 'adminLogin'){ app.innerHTML = renderAdminLogin(); bindAdminLogin(); return; }
+    if(state.view === 'adminDashboard'){ app.innerHTML = renderAdminDashboard(); bindAdminDashboard(); return; }
+    if(state.view === 'adminConfig'){ app.innerHTML = renderAdminConfig(); bindAdminConfig(); return; }
+  }
+
+  // ---------------- Public registration ----------------
+  function renderRegister(){
+    var c = state.config;
+    var body;
+    if(state.lastCode){
+      body = '' +
+        '<div class="card">' +
+          '<div class="success">' +
+            '<svg class="check" viewBox="0 0 52 52"><circle cx="26" cy="26" r="25" fill="none" stroke="#1F6B4A" stroke-width="2"/><path fill="none" stroke="#1F6B4A" stroke-width="3" d="M14 27l8 8 16-16"/></svg>' +
+            '<h2>Đăng ký thành công!</h2>' +
+            '<p>Thông tin của bạn đang chờ Ban tổ chức duyệt. Sau khi được duyệt, bạn sẽ xuất hiện trong danh sách đăng ký công khai.</p>' +
+            '<div class="code">' + esc(state.lastCode) + '</div>' +
+          '</div>' +
+          '<div style="margin-top:22px;">' +
+            '<button class="btn btn-outline" style="width:100%;" id="btnAnother">Đăng ký thêm người khác</button>' +
+          '</div>' +
+          '<div style="text-align:center;margin-top:14px;">' +
+            '<a href="#" id="linkSeeList" style="font-size:13px;color:#4A5750;">Xem danh sách đã đăng ký</a>' +
+          '</div>' +
+        '</div>';
+    } else if(!c.registrationOpen){
+      body = '<div class="card"><h2>Đăng ký đã đóng</h2><p class="lead" style="border:none;padding:0;">Ban tổ chức hiện không nhận thêm đăng ký cho giải này. Vui lòng liên hệ ban tổ chức nếu bạn cần hỗ trợ.</p></div>';
+    } else {
+      var sessionBoxes = c.sessions.map(function(s){
+        return '<label class="choice"><input type="checkbox" name="session" value="' + esc(s.id) + '"><span class="box">' + esc(s.label) + '</span></label>';
+      }).join('');
+      body = '' +
+        '<form class="card" id="regForm" novalidate>' +
+          '<h2>Đăng ký tham dự</h2>' +
+          '<p class="lead">Điền thông tin bên dưới để tham gia giao lưu.</p>' +
+
+          '<div class="field">' +
+            '<label class="flabel">Họ tên</label>' +
+            '<input type="text" name="hoTen" autocomplete="name" required>' +
+          '</div>' +
+
+          '<div class="field">' +
+            '<label class="flabel">Phòng ban / Công ty / Bạn giới thiệu</label>' +
+            '<input type="text" name="donVi" required>' +
+          '</div>' +
+
+          '<div class="field">' +
+            '<label class="flabel">Giới tính</label>' +
+            '<div class="choice-row">' +
+              '<label class="choice"><input type="radio" name="gioiTinh" value="Nam" required><span class="box">Nam</span></label>' +
+              '<label class="choice"><input type="radio" name="gioiTinh" value="Nữ"><span class="box">Nữ</span></label>' +
+              '<label class="choice"><input type="radio" name="gioiTinh" value="Khác"><span class="box">Khác</span></label>' +
+            '</div>' +
+          '</div>' +
+
+          '<div class="field">' +
+            '<label class="flabel">Năm sinh</label>' +
+            '<input type="number" name="namSinh" min="1940" max="2015" placeholder="VD: 1990" required style="max-width:160px;">' +
+          '</div>' +
+
+          '<div class="field">' +
+            '<label class="flabel">Thời gian tham dự được</label>' +
+            '<div class="choice-row session-row">' + sessionBoxes + '</div>' +
+            '<div class="hint">Có thể chọn một hoặc cả hai ngày.</div>' +
+          '</div>' +
+
+          '<div id="formErr" class="err" style="display:none;"></div>' +
+
+          '<button type="submit" class="btn btn-primary" id="btnSubmit">Đăng ký tham dự</button>' +
+        '</form>';
+    }
+
+    return '' +
+      bannerHTML() +
+      infoSectionHTML() +
+      '<div class="wrap">' + body + '</div>' +
+      '<footer class="site-foot">SABECO và những người bạn — ' + esc(c.eventEdition) + ' &nbsp;·&nbsp; <a href="#" id="linkSeeList2">Danh sách đã đăng ký</a> &nbsp;·&nbsp; <a href="#" id="linkAdmin">Quản trị</a></footer>';
+  }
+
+  function bindRegister(){
+    var link = document.getElementById('linkAdmin');
+    if(link) link.addEventListener('click', function(e){ e.preventDefault(); state.view='adminLogin'; state.adminError=''; render(); });
+
+    var link2 = document.getElementById('linkSeeList2');
+    if(link2) link2.addEventListener('click', function(e){ e.preventDefault(); state.view='publicList'; render(); });
+
+    var link3 = document.getElementById('linkSeeList');
+    if(link3) link3.addEventListener('click', function(e){ e.preventDefault(); state.view='publicList'; render(); });
+
+    var again = document.getElementById('btnAnother');
+    if(again) again.addEventListener('click', function(){ state.lastCode=''; render(); });
+
+    var form = document.getElementById('regForm');
+    if(!form) return;
+    form.addEventListener('submit', async function(e){
+      e.preventDefault();
+      var errEl = document.getElementById('formErr');
+      var fd = new FormData(form);
+      var hoTen = (fd.get('hoTen')||'').toString().trim();
+      var donVi = (fd.get('donVi')||'').toString().trim();
+      var gioiTinh = fd.get('gioiTinh');
+      var namSinh = (fd.get('namSinh')||'').toString().trim();
+      var sessions = fd.getAll('session');
+
+      if(!hoTen || !donVi || !gioiTinh || !namSinh || sessions.length===0){
+        errEl.textContent = 'Vui lòng điền đầy đủ thông tin, bao gồm ít nhất một ngày tham dự.';
+        errEl.style.display='block';
+        return;
+      }
+      var yearNum = parseInt(namSinh,10);
+      if(isNaN(yearNum) || yearNum < 1900 || yearNum > 2020){
+        errEl.textContent = 'Năm sinh không hợp lệ.';
+        errEl.style.display='block';
+        return;
+      }
+      errEl.style.display='none';
+
+      var btn = document.getElementById('btnSubmit');
+      btn.disabled = true; btn.textContent = 'Đang gửi…';
+
+      try{
+        var result = await apiPost({
+          action: 'register',
+          hoTen: hoTen,
+          donVi: donVi,
+          gioiTinh: gioiTinh,
+          namSinh: yearNum,
+          sessions: sessions
+        });
+        if(!result.ok) throw new Error(result.error || 'failed');
+        await refreshAll();
+        state.lastCode = (result.id || '').toUpperCase();
+        render();
+      }catch(err){
+        btn.disabled = false; btn.textContent = 'Đăng ký tham dự';
+        errEl.textContent = 'Có lỗi xảy ra khi lưu đăng ký, vui lòng thử lại.';
+        errEl.style.display='block';
+      }
+    });
+  }
+
+  // ---------------- Public approved list ----------------
+  function renderPublicList(){
+    var c = state.config;
+    var approved = state.registrations.filter(function(r){ return r.status === 'approved'; });
+
+    var filterSessions = state.listFilterSession;
+    var shown = approved;
+    if(filterSessions !== 'all'){
+      shown = approved.filter(function(r){ return (r.sessions||[]).indexOf(filterSessions) !== -1; });
+    }
+    shown = shown.slice().sort(function(a,b){ return a.hoTen.localeCompare(b.hoTen, 'vi'); });
+
+    var tabs = '<button class="btn-outline listtab" data-sess="all" style="'+(filterSessions==='all'?'background:rgba(31,107,74,0.1);':'')+'">Tất cả</button>' +
+      c.sessions.map(function(s){
+        return '<button class="btn-outline listtab" data-sess="'+esc(s.id)+'" style="'+(filterSessions===s.id?'background:rgba(31,107,74,0.1);':'')+'">'+esc(s.label)+'</button>';
+      }).join('');
+
+    var rows = shown.map(function(r, idx){
+      var sessLabels = (r.sessions||[]).map(function(sid){
+        var found = c.sessions.find(function(s){ return s.id===sid; });
+        return found ? found.label : sid;
+      });
+      return '<tr>' +
+        '<td>'+(idx+1)+'</td>' +
+        '<td>'+esc(r.hoTen)+'</td>' +
+        '<td>'+esc(r.donVi)+'</td>' +
+        '<td>'+ sessLabels.map(function(l){return '<span class="pill">'+esc(l)+'</span>';}).join('') +'</td>' +
+      '</tr>';
+    }).join('');
+    if(!rows){
+      rows = '<tr class="empty-row"><td colspan="4">Chưa có người đăng ký nào được duyệt'+(filterSessions!=='all'?' cho ngày này':'')+'.</td></tr>';
+    }
+
+    return '' +
+      bannerHTML() +
+      '<div class="wrap wide">' +
+        '<div class="card" style="margin-top:6px;">' +
+          '<h2>Danh sách đã đăng ký</h2>' +
+          '<p class="lead">Danh sách những người đã được Ban tổ chức duyệt tham dự.</p>' +
+          '<div class="toolbar" style="margin-bottom:16px;">' + tabs + '</div>' +
+          '<div class="table-wrap">' +
+            '<table>' +
+              '<thead><tr><th>#</th><th>Họ tên</th><th>Phòng ban/Công ty/Giới thiệu</th><th>Ngày tham dự</th></tr></thead>' +
+              '<tbody>'+rows+'</tbody>' +
+            '</table>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<footer class="site-foot"><a href="#" id="linkBackReg">← Về trang đăng ký</a></footer>';
+  }
+
+  function bindPublicList(){
+    document.getElementById('linkBackReg').addEventListener('click', function(e){ e.preventDefault(); state.view='register'; render(); });
+    Array.prototype.forEach.call(document.querySelectorAll('.listtab'), function(btn){
+      btn.addEventListener('click', function(){ state.listFilterSession = btn.getAttribute('data-sess'); render(); });
+    });
+  }
+
+  // ---------------- Admin login ----------------
+  function renderAdminLogin(){
+    return '' +
+      '<div class="admin-topbar"><div class="title">Quản trị giải đấu</div>' +
+      '<nav><a href="#" id="backToSite">Về trang đăng ký</a></nav></div>' +
+      '<div class="login-wrap">' +
+        '<div class="card">' +
+          '<h2>Đăng nhập quản trị</h2>' +
+          '<p class="lead">Nhập mật khẩu quản trị để tiếp tục.</p>' +
+          '<form id="loginForm">' +
+            '<div class="field">' +
+              '<label class="flabel">Mật khẩu</label>' +
+              '<input type="text" name="pw" autocomplete="off">' +
+            '</div>' +
+            (state.adminError ? '<div class="err" style="margin-bottom:12px;">'+esc(state.adminError)+'</div>' : '') +
+            '<button type="submit" class="btn btn-primary">Đăng nhập</button>' +
+          '</form>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function bindAdminLogin(){
+    document.getElementById('backToSite').addEventListener('click', function(e){ e.preventDefault(); state.view='register'; render(); });
+    document.getElementById('loginForm').addEventListener('submit', async function(e){
+      e.preventDefault();
+      var pw = new FormData(e.target).get('pw');
+      var btn = e.target.querySelector('button[type=submit]');
+      btn.disabled = true; btn.textContent = 'Đang kiểm tra…';
+      try{
+        var result = await apiPost({ action: 'login', password: pw });
+        if(result.ok){
+          state.isAdmin = true;
+          state.adminPasswordCache = pw;
+          state.adminError = '';
+          await refreshAll();
+          state.view = 'adminDashboard';
+        } else {
+          state.adminError = 'Mật khẩu không đúng.';
+        }
+      }catch(err){
+        state.adminError = 'Không kết nối được máy chủ, vui lòng thử lại.';
+      }
+      render();
+    });
+  }
+
+  // ---------------- Admin dashboard ----------------
+  function renderAdminDashboard(){
+    var c = state.config;
+    var list = state.registrations.slice().sort(function(a,b){ return new Date(b.createdAt) - new Date(a.createdAt); });
+    var q = state.search.trim().toLowerCase();
+    if(q){
+      list = list.filter(function(r){
+        return (r.hoTen+' '+r.donVi).toLowerCase().indexOf(q) !== -1;
+      });
+    }
+    var statusFilter = state.adminFilterStatus;
+    if(statusFilter !== 'all'){
+      list = list.filter(function(r){ return (r.status||'pending') === statusFilter; });
+    }
+
+    var total = state.registrations.length;
+    var pendingCount = state.registrations.filter(function(r){ return (r.status||'pending')==='pending'; }).length;
+    var approvedCount = state.registrations.filter(function(r){ return r.status==='approved'; }).length;
+    var perSession = {};
+    c.sessions.forEach(function(s){ perSession[s.id] = 0; });
+    state.registrations.forEach(function(r){
+      (r.sessions||[]).forEach(function(sid){ if(perSession[sid]!==undefined) perSession[sid]++; });
+    });
+
+    var statCards = '<div class="stat"><div class="num">'+total+'</div><div class="lbl">Tổng số đăng ký</div></div>' +
+      '<div class="stat" style="border-left-color:var(--gold);"><div class="num">'+pendingCount+'</div><div class="lbl">Chờ duyệt</div></div>' +
+      '<div class="stat"><div class="num">'+approvedCount+'</div><div class="lbl">Đã duyệt</div></div>' +
+      c.sessions.map(function(s){
+        return '<div class="stat"><div class="num">'+ (perSession[s.id]||0) +'</div><div class="lbl">'+esc(s.label)+'</div></div>';
+      }).join('');
+
+    function statusPill(status){
+      status = status || 'pending';
+      if(status === 'approved') return '<span class="pill" style="background:rgba(31,107,74,0.15);color:var(--court-dark);">Đã duyệt</span>';
+      if(status === 'rejected') return '<span class="pill" style="background:rgba(181,67,47,0.12);color:var(--danger);">Từ chối</span>';
+      return '<span class="pill" style="background:rgba(181,138,61,0.16);color:var(--gold);">Chờ duyệt</span>';
+    }
+
+    var rows = list.map(function(r){
+      var sessLabels = (r.sessions||[]).map(function(sid){
+        var found = c.sessions.find(function(s){ return s.id===sid; });
+        return found ? found.label : sid;
+      });
+      var status = r.status || 'pending';
+      var actions = '';
+      if(status !== 'approved') actions += '<button class="btn-outline actbtn" data-approve="'+esc(r.id)+'" style="margin-right:6px;padding:5px 10px;font-size:12.5px;">Duyệt</button>';
+      if(status !== 'rejected') actions += '<button class="btn-danger actbtn" data-reject="'+esc(r.id)+'" style="margin-right:6px;">Từ chối</button>';
+      if(status !== 'pending') actions += '<button class="btn-ghost actbtn" data-pending="'+esc(r.id)+'" style="margin-right:6px;">Về chờ duyệt</button>';
+      actions += '<button class="btn-danger actbtn" data-del="'+esc(r.id)+'">Xóa</button>';
+      return '<tr>' +
+        '<td>'+esc(r.hoTen)+'</td>' +
+        '<td>'+esc(r.donVi)+'</td>' +
+        '<td>'+esc(r.gioiTinh)+'</td>' +
+        '<td>'+esc(r.namSinh)+'</td>' +
+        '<td>'+ sessLabels.map(function(l){return '<span class="pill">'+esc(l)+'</span>';}).join('') +'</td>' +
+        '<td>'+statusPill(status)+'</td>' +
+        '<td>'+ esc(new Date(r.createdAt).toLocaleString('vi-VN')) +'</td>' +
+        '<td style="white-space:nowrap;">'+actions+'</td>' +
+      '</tr>';
+    }).join('');
+
+    if(!rows){
+      rows = '<tr class="empty-row"><td colspan="8">Chưa có đăng ký nào'+(q?' khớp với tìm kiếm':'')+'.</td></tr>';
+    }
+
+    var statusTabs = ['all','pending','approved','rejected'].map(function(s){
+      var lbl = s==='all'?'Tất cả':(s==='pending'?'Chờ duyệt':(s==='approved'?'Đã duyệt':'Từ chối'));
+      return '<button class="btn-outline stattab" data-status="'+s+'" style="'+(statusFilter===s?'background:rgba(31,107,74,0.1);':'')+'">'+lbl+'</button>';
+    }).join('');
+
+    return '' +
+      '<div class="admin-topbar">' +
+        '<div class="title">Quản trị · '+esc(c.eventTitle)+' — '+esc(c.eventEdition)+'</div>' +
+        '<nav>' +
+          '<a href="#" id="linkConfig">Cấu hình giải</a>' +
+          '<a href="#" id="linkPublicList">Danh sách công khai</a>' +
+          '<a href="#" id="linkBack">Về trang đăng ký</a>' +
+          '<button class="linklike" id="btnLogout">Đăng xuất</button>' +
+        '</nav>' +
+      '</div>' +
+      '<div class="wrap wide">' +
+        '<div class="stat-grid">'+statCards+'</div>' +
+        '<div class="toolbar">' +
+          '<input type="text" id="searchBox" placeholder="Tìm theo tên hoặc đơn vị…" value="'+esc(state.search)+'">' +
+          '<div style="display:flex;gap:8px;flex-wrap:wrap;">'+statusTabs+'</div>' +
+          '<button class="btn btn-outline" id="btnExport">Xuất CSV</button>' +
+        '</div>' +
+        '<div class="table-wrap">' +
+          '<table>' +
+            '<thead><tr><th>Họ tên</th><th>Phòng ban/Công ty/Giới thiệu</th><th>Giới tính</th><th>Năm sinh</th><th>Ngày tham dự</th><th>Trạng thái</th><th>Đăng ký lúc</th><th></th></tr></thead>' +
+            '<tbody>'+rows+'</tbody>' +
+          '</table>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function bindAdminDashboard(){
+    document.getElementById('linkConfig').addEventListener('click', function(e){ e.preventDefault(); state.view='adminConfig'; render(); });
+    document.getElementById('linkPublicList').addEventListener('click', function(e){ e.preventDefault(); state.view='publicList'; render(); });
+    document.getElementById('linkBack').addEventListener('click', function(e){ e.preventDefault(); state.view='register'; render(); });
+    document.getElementById('btnLogout').addEventListener('click', function(){ state.isAdmin=false; state.view='register'; render(); });
+
+    var search = document.getElementById('searchBox');
+    search.addEventListener('input', function(){ state.search = search.value; render(); document.getElementById('searchBox').focus(); document.getElementById('searchBox').selectionStart = document.getElementById('searchBox').value.length; });
+
+    document.getElementById('btnExport').addEventListener('click', function(){ exportCSV(); });
+
+    Array.prototype.forEach.call(document.querySelectorAll('.stattab'), function(btn){
+      btn.addEventListener('click', function(){ state.adminFilterStatus = btn.getAttribute('data-status'); render(); });
+    });
+
+    async function updateStatus(id, newStatus){
+      var action = newStatus === 'approved' ? 'approve' : (newStatus === 'rejected' ? 'reject' : 'pending');
+      try{
+        var result = await apiPost({ action: action, id: id, password: state.adminPasswordCache });
+        if(!result.ok) throw new Error(result.error || 'failed');
+        await refreshAll();
+        render();
+      }catch(e){ alert('Không thể cập nhật trạng thái, vui lòng thử lại.'); }
+    }
+
+    Array.prototype.forEach.call(document.querySelectorAll('[data-approve]'), function(btn){
+      btn.addEventListener('click', function(){ updateStatus(btn.getAttribute('data-approve'), 'approved'); });
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-reject]'), function(btn){
+      btn.addEventListener('click', function(){ updateStatus(btn.getAttribute('data-reject'), 'rejected'); });
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-pending]'), function(btn){
+      btn.addEventListener('click', function(){ updateStatus(btn.getAttribute('data-pending'), 'pending'); });
+    });
+
+    Array.prototype.forEach.call(document.querySelectorAll('[data-del]'), function(btn){
+      btn.addEventListener('click', async function(){
+        var id = btn.getAttribute('data-del');
+        if(!confirm('Xóa đăng ký này?')) return;
+        try{
+          var result = await apiPost({ action: 'delete', id: id, password: state.adminPasswordCache });
+          if(!result.ok) throw new Error(result.error || 'failed');
+          await refreshAll();
+          render();
+        }catch(e){ alert('Không thể xóa, vui lòng thử lại.'); }
+      });
+    });
+  }
+
+  function exportCSV(){
+    var c = state.config;
+    var header = ['Ho ten','Phong ban/Cong ty/Gioi thieu','Gioi tinh','Nam sinh','Ngay tham du','Trang thai','Dang ky luc'];
+    var lines = [header.join(',')];
+    state.registrations.forEach(function(r){
+      var sessLabels = (r.sessions||[]).map(function(sid){
+        var found = c.sessions.find(function(s){ return s.id===sid; });
+        return found ? found.label : sid;
+      }).join(' + ');
+      var statusText = (r.status==='approved') ? 'Da duyet' : (r.status==='rejected' ? 'Tu choi' : 'Cho duyet');
+      var row = [r.hoTen, r.donVi, r.gioiTinh, r.namSinh, sessLabels, statusText, new Date(r.createdAt).toLocaleString('vi-VN')];
+      lines.push(row.map(function(v){
+        var s = String(v==null?'':v).replace(/"/g,'""');
+        return '"' + s + '"';
+      }).join(','));
+    });
+    var csv = '\uFEFF' + lines.join('\r\n');
+    var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'dang-ky-pickleball.csv';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // ---------------- Admin config ----------------
+  function renderAdminConfig(){
+    var c = state.config;
+    var sessionRows = c.sessions.map(function(s, idx){
+      return '<div class="field">' +
+        '<label class="flabel">Nhãn ngày thi đấu #'+(idx+1)+'</label>' +
+        '<input type="text" data-session-id="'+esc(s.id)+'" class="sessInput" value="'+esc(s.label)+'">' +
+      '</div>';
+    }).join('');
+
+    return '' +
+      '<div class="admin-topbar">' +
+        '<div class="title">Cấu hình giải</div>' +
+        '<nav>' +
+          '<a href="#" id="linkDash">Về bảng quản trị</a>' +
+        '</nav>' +
+      '</div>' +
+      '<div class="wrap">' +
+        '<form class="card" id="cfgForm">' +
+          '<h2>Thông tin giải đấu</h2>' +
+          '<p class="lead">Thay đổi sẽ áp dụng ngay cho trang đăng ký.</p>' +
+
+          '<div class="field"><label class="flabel">Tên giải</label><input type="text" id="cfgTitle" value="'+esc(c.eventTitle)+'"></div>' +
+          '<div class="field"><label class="flabel">Lần thứ</label><input type="text" id="cfgEdition" value="'+esc(c.eventEdition)+'"></div>' +
+          '<div class="field"><label class="flabel">Mô tả ngắn</label><input type="text" id="cfgSubtitle" value="'+esc(c.eventSubtitle)+'"></div>' +
+
+          '<div class="field"><label class="flabel">Mục đích giải đấu</label><textarea id="cfgPurpose">'+esc(c.eventPurpose)+'</textarea></div>' +
+          '<div class="field"><label class="flabel">Thể thức thi đấu</label><textarea id="cfgFormat">'+esc(c.eventFormat)+'</textarea></div>' +
+          '<div class="field"><label class="flabel">Đối tượng tham gia</label><textarea id="cfgAudience">'+esc(c.eventAudience)+'</textarea></div>' +
+
+          sessionRows +
+
+          '<div class="toggle-row">' +
+            '<input type="checkbox" id="cfgOpen" '+(c.registrationOpen?'checked':'')+'>' +
+            '<label for="cfgOpen" style="font-size:14px;font-weight:600;">Đang mở đăng ký</label>' +
+          '</div>' +
+
+          '<div class="field">' +
+            '<label class="flabel">Đổi mật khẩu quản trị (để trống nếu không đổi)</label>' +
+            '<input type="text" id="cfgPassword" placeholder="Mật khẩu mới">' +
+          '</div>' +
+
+          '<div id="cfgMsg" class="hint" style="display:none;margin-bottom:14px;"></div>' +
+          '<button type="submit" class="btn btn-primary" id="cfgSave">Lưu thay đổi</button>' +
+        '</form>' +
+      '</div>';
+  }
+
+  function bindAdminConfig(){
+    document.getElementById('linkDash').addEventListener('click', function(e){ e.preventDefault(); state.view='adminDashboard'; render(); });
+
+    document.getElementById('cfgForm').addEventListener('submit', async function(e){
+      e.preventDefault();
+      var c = state.config;
+      var newSessions = c.sessions.map(function(s){
+        var input = document.querySelector('.sessInput[data-session-id="'+s.id+'"]');
+        return { id: s.id, label: input.value.trim() || s.label };
+      });
+      var newCfg = {
+        eventTitle: document.getElementById('cfgTitle').value.trim() || c.eventTitle,
+        eventEdition: document.getElementById('cfgEdition').value.trim() || c.eventEdition,
+        eventSubtitle: document.getElementById('cfgSubtitle').value.trim() || c.eventSubtitle,
+        eventPurpose: document.getElementById('cfgPurpose').value.trim() || c.eventPurpose,
+        eventFormat: document.getElementById('cfgFormat').value.trim() || c.eventFormat,
+        eventAudience: document.getElementById('cfgAudience').value.trim() || c.eventAudience,
+        sessions: newSessions,
+        registrationOpen: document.getElementById('cfgOpen').checked,
+        adminPassword: document.getElementById('cfgPassword').value.trim() || c.adminPassword
+      };
+      var msg = document.getElementById('cfgMsg');
+      try{
+        var result = await apiPost({ action: 'saveConfig', config: newCfg, password: state.adminPasswordCache });
+        if(!result.ok) throw new Error(result.error || 'failed');
+        state.config = newCfg;
+        state.adminPasswordCache = newCfg.adminPassword;
+        msg.textContent = 'Đã lưu cấu hình.';
+        msg.style.display='block';
+        setTimeout(function(){ state.view='adminDashboard'; render(); }, 500);
+      }catch(err){
+        msg.textContent = 'Lưu thất bại, vui lòng thử lại.';
+        msg.style.display='block';
+      }
+    });
+  }
+
+  // ---------------- Init ----------------
+  async function init(){
+    state.view = 'loading'; render();
+    if(!apiConfigured()){
+      state.view = 'setupNeeded';
+      render();
+      return;
+    }
+    try{
+      await refreshAll();
+      state.view = 'register';
+      render();
+    }catch(e){
+      state.view = 'loadError';
+      render();
+    }
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
