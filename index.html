@@ -381,7 +381,7 @@
     margin-bottom:7px;
   }
   .field .hint{ font-size:12.5px; color:#6B776F; margin-top:5px; }
-  input[type=text], input[type=number]{
+  input[type=text], input[type=number], select{
     width:100%;
     padding:11px 12px;
     border:1.5px solid #C9D2CC;
@@ -391,7 +391,7 @@
     background:#fff;
     color:var(--ink);
   }
-  input[type=text]:focus, input[type=number]:focus{
+  input[type=text]:focus, input[type=number]:focus, select:focus{
     outline:none;
     border-color:var(--court);
     box-shadow:0 0 0 3px rgba(31,107,74,0.12);
@@ -613,6 +613,40 @@
   }
   .empty-row td{ text-align:center; color:#7C877F; padding:34px 14px; }
 
+  .team-card{
+    background:#fff; border:1px solid rgba(31,107,74,0.18); border-radius:6px;
+    padding:16px; margin-bottom:14px;
+  }
+  .team-card .team-head{ display:flex; gap:10px; align-items:center; margin-bottom:12px; }
+  .team-card .team-head input[type=text]{ font-weight:700; }
+  .member-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:10px; }
+  .member-field{ display:flex; flex-direction:column; gap:4px; }
+  .member-field label{ font-size:11.5px; font-weight:700; color:#5B665F; }
+  .rank-badge{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:20px; height:20px; border-radius:50%; background:var(--court); color:#fff;
+    font-size:11px; font-weight:800; margin-right:6px;
+  }
+  .group-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); gap:18px; margin-top:16px; }
+  .group-col{ background:#fff; border:1px solid rgba(31,107,74,0.18); border-radius:6px; padding:14px 16px; }
+  .group-col h3{ margin:0 0 10px; font-size:16px; }
+  .group-col .team-row{ display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid #EFEBDE; }
+  .group-col .team-row:last-child{ border-bottom:none; }
+  .group-col select{ width:auto; padding:5px 8px; font-size:13px; }
+  .match-card{ background:#fff; border:1px solid rgba(31,107,74,0.18); border-radius:6px; padding:14px 16px; margin-bottom:12px; }
+  .match-card .match-title{ font-weight:800; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+  .match-card .match-score{ font-size:13px; font-weight:700; color:var(--court-dark); }
+  .pairrow{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:7px 0; border-top:1px dashed #EAE6D9; }
+  .pairrow:first-of-type{ border-top:none; }
+  .pairrow .pairnames{ flex:1; min-width:180px; font-size:13.5px; }
+  .pairrow .pairpick{ display:flex; gap:6px; }
+  .pairrow .pairpick button{
+    padding:5px 10px; font-size:12px; border-radius:4px; border:1.5px solid #C9D2CC; background:#fff; cursor:pointer;
+  }
+  .pairrow .pairpick button.picked{ background:var(--court); border-color:var(--court); color:#fff; }
+  .standings-table tr.top3 td{ background:rgba(181,138,61,0.12); }
+  .standings-table td.rank-no{ font-weight:800; }
+
   .login-wrap{
     max-width:380px; margin:60px auto; padding:0 20px;
   }
@@ -671,7 +705,8 @@
       registrationOpen: true,
       adminPassword: "sabeco2026",
       bannerImageUrl: "",
-      registrationDeadline: "2026-09-17T23:59"
+      registrationDeadline: "2026-09-17T23:59",
+      tournament: { teams: [], matches: [] }
     };
   }
 
@@ -691,7 +726,9 @@
     listFilterSession: 'all',
     adminFilterStatus: 'all',
     adminPasswordCache: '',
-    loadError: ''
+    loadError: '',
+    teamsMsg: '',
+    drawMsg: ''
   };
 
   // ====== ĐIỀU HƯỚNG (URL dạng #/...) ======
@@ -700,6 +737,7 @@
     if(view === 'adminLogin') return '/admin';
     if(view === 'adminDashboard') return '/admin/duyet';
     if(view === 'adminConfig') return '/admin/giai-dau';
+    if(view === 'adminGroups') return '/admin/vong-bang';
     return '/';
   }
 
@@ -710,6 +748,7 @@
     if(path === '/admin') return state.isAdmin ? 'adminDashboard' : 'adminLogin';
     if(path === '/admin/duyet') return state.isAdmin ? 'adminDashboard' : 'adminLogin';
     if(path === '/admin/giai-dau') return state.isAdmin ? 'adminConfig' : 'adminLogin';
+    if(path === '/admin/vong-bang') return state.isAdmin ? 'adminGroups' : 'adminLogin';
     return 'register';
   }
 
@@ -753,12 +792,19 @@
     return await res.json();
   }
 
+  function normalizeConfig(cfg){
+    cfg.tournament = cfg.tournament || { teams: [], matches: [] };
+    cfg.tournament.teams = cfg.tournament.teams || [];
+    cfg.tournament.matches = cfg.tournament.matches || [];
+    return cfg;
+  }
+
   async function loadAll(){
     if(!apiConfigured()){
       return { config: defaultConfig(), registrations: [] };
     }
     var data = await apiGetAll();
-    return { config: data.config || defaultConfig(), registrations: data.registrations || [] };
+    return { config: normalizeConfig(data.config || defaultConfig()), registrations: data.registrations || [] };
   }
 
   async function refreshAll(){
@@ -1116,6 +1162,7 @@
     if(state.view === 'adminLogin'){ app.innerHTML = renderAdminLogin(); bindAdminLogin(); return; }
     if(state.view === 'adminDashboard'){ app.innerHTML = renderAdminDashboard(); bindAdminDashboard(); return; }
     if(state.view === 'adminConfig'){ app.innerHTML = renderAdminConfig(); bindAdminConfig(); return; }
+    if(state.view === 'adminGroups'){ app.innerHTML = renderAdminGroups(); bindAdminGroups(); return; }
   }
 
   // ---------------- Public registration ----------------
@@ -1295,6 +1342,7 @@
   function adminTabsHTML(active){
     return '<div class="admin-tabs">' +
       '<a href="#/admin/duyet" class="admintab' + (active==='duyet' ? ' active' : '') + '">🗂️ Duyệt đăng ký</a>' +
+      '<a href="#/admin/vong-bang" class="admintab' + (active==='vongbang' ? ' active' : '') + '">🏆 Vòng bảng</a>' +
       '<a href="#/admin/giai-dau" class="admintab' + (active==='giaidau' ? ' active' : '') + '">🎨 Quản lý giải đấu</a>' +
     '</div>';
   }
@@ -1339,6 +1387,7 @@
           state.adminError = 'Mật khẩu không đúng.';
         }
       }catch(err){
+        console.error('Đăng nhập admin thất bại:', err);
         state.adminError = 'Không kết nối được máy chủ, vui lòng thử lại.';
       }
       render();
@@ -1671,7 +1720,8 @@
         registrationOpen: document.getElementById('cfgOpen').checked,
         adminPassword: document.getElementById('cfgPassword').value.trim() || c.adminPassword,
         bannerImageUrl: pendingBanner,
-        registrationDeadline: document.getElementById('cfgDeadline').value || c.registrationDeadline || DEFAULT_REGISTRATION_DEADLINE
+        registrationDeadline: document.getElementById('cfgDeadline').value || c.registrationDeadline || DEFAULT_REGISTRATION_DEADLINE,
+        tournament: c.tournament || { teams: [], matches: [] }
       };
       var msg = document.getElementById('cfgMsg');
       try{
@@ -1689,6 +1739,396 @@
     });
   }
 
+  // ---------------- Vòng bảng (bốc thăm, lịch, kết quả) ----------------
+  var PAIR_ROTATION = [[0,2],[0,1],[1,3],[3,4],[2,4]]; // A-C, A-B, B-D, D-E, C-E
+  var RANK_LETTERS = ['A','B','C','D','E'];
+
+  function tour(){
+    return state.config.tournament;
+  }
+
+  function teamById(id){
+    var teams = tour().teams;
+    for(var i=0;i<teams.length;i++){ if(teams[i].id === id) return teams[i]; }
+    return null;
+  }
+
+  function teamLabel(team){
+    return team ? team.name : '(đội đã xóa)';
+  }
+
+  function withTournament(cfg, tournament){
+    var copy = {};
+    for(var k in cfg){ if(cfg.hasOwnProperty(k)) copy[k] = cfg[k]; }
+    copy.tournament = tournament;
+    return copy;
+  }
+
+  function matchTally(match){
+    var results = match.results || [null,null,null,null,null];
+    var winsA = 0, winsB = 0, played = 0;
+    results.forEach(function(r){
+      if(r === 'A'){ winsA++; played++; }
+      else if(r === 'B'){ winsB++; played++; }
+    });
+    var complete = played === 5;
+    var winnerTeamId = null;
+    if(complete){
+      winnerTeamId = winsA > winsB ? match.teamAId : (winsB > winsA ? match.teamBId : null);
+    }
+    return { winsA: winsA, winsB: winsB, played: played, complete: complete, winnerTeamId: winnerTeamId };
+  }
+
+  function buildGroupMatches(existingMatches, teams, group){
+    var groupTeams = teams.filter(function(t){ return t.group === group; });
+    var matches = [];
+    for(var i=0;i<groupTeams.length;i++){
+      for(var j=i+1;j<groupTeams.length;j++){
+        var a = groupTeams[i], b = groupTeams[j];
+        var found = existingMatches.find(function(m){
+          return m.group === group &&
+            ((m.teamAId===a.id && m.teamBId===b.id) || (m.teamAId===b.id && m.teamBId===a.id));
+        });
+        matches.push(found || {
+          id: 'm'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+          group: group, teamAId: a.id, teamBId: b.id,
+          results: [null,null,null,null,null]
+        });
+      }
+    }
+    return matches;
+  }
+
+  function regenerateAllMatches(){
+    var t = tour();
+    t.matches = buildGroupMatches(t.matches, t.teams, 'A').concat(buildGroupMatches(t.matches, t.teams, 'B'));
+  }
+
+  function computeStandings(group){
+    var t = tour();
+    var teams = t.teams.filter(function(tm){ return tm.group === group; });
+    var matches = t.matches.filter(function(m){ return m.group === group; });
+    var table = teams.map(function(tm){
+      return { team: tm, played:0, wins:0, losses:0, gamesWon:0, gamesLost:0 };
+    });
+    function rowFor(id){
+      for(var i=0;i<table.length;i++){ if(table[i].team.id===id) return table[i]; }
+      return null;
+    }
+    matches.forEach(function(m){
+      var tally = matchTally(m);
+      if(!tally.complete) return;
+      var rowA = rowFor(m.teamAId), rowB = rowFor(m.teamBId);
+      if(!rowA || !rowB) return;
+      rowA.played++; rowB.played++;
+      rowA.gamesWon += tally.winsA; rowA.gamesLost += tally.winsB;
+      rowB.gamesWon += tally.winsB; rowB.gamesLost += tally.winsA;
+      if(tally.winnerTeamId === m.teamAId){ rowA.wins++; rowB.losses++; }
+      else if(tally.winnerTeamId === m.teamBId){ rowB.wins++; rowA.losses++; }
+    });
+    table.sort(function(x,y){
+      if(y.wins !== x.wins) return y.wins - x.wins;
+      var diffX = x.gamesWon - x.gamesLost, diffY = y.gamesWon - y.gamesLost;
+      if(diffY !== diffX) return diffY - diffX;
+      return y.gamesWon - x.gamesWon;
+    });
+    return table;
+  }
+
+  function shuffleArray(arr){
+    var a = arr.slice();
+    for(var i=a.length-1;i>0;i--){
+      var j = Math.floor(Math.random()*(i+1));
+      var tmp=a[i]; a[i]=a[j]; a[j]=tmp;
+    }
+    return a;
+  }
+
+  function drawGroups(){
+    var t = tour();
+    var shuffled = shuffleArray(t.teams);
+    shuffled.forEach(function(tm, idx){ tm.group = (idx % 2 === 0) ? 'A' : 'B'; });
+  }
+
+  function teamCardHTML(tm, idx){
+    var members = tm.members || ['','','','',''];
+    var memberFields = RANK_LETTERS.map(function(letter, i){
+      return '<div class="member-field">' +
+        '<label><span class="rank-badge">'+letter+'</span>Thành viên</label>' +
+        '<input type="text" class="teamMemberInput" data-rank="'+i+'" value="'+esc(members[i]||'')+'" placeholder="Trình '+letter+'">' +
+      '</div>';
+    }).join('');
+    return '' +
+      '<div class="team-card" data-team-id="'+esc(tm.id)+'">' +
+        '<div class="team-head">' +
+          '<input type="text" class="teamNameInput" value="'+esc(tm.name)+'" placeholder="Tên đội '+idx+'" style="flex:1;">' +
+          '<button type="button" class="btn-danger btnRemoveTeam" data-team-id="'+esc(tm.id)+'">Xóa đội</button>' +
+        '</div>' +
+        '<div class="member-grid">' + memberFields + '</div>' +
+      '</div>';
+  }
+
+  function groupsOverviewHTML(teams){
+    var groups = { A: [], B: [], '': [] };
+    teams.forEach(function(tm){
+      var g = (tm.group === 'A' || tm.group === 'B') ? tm.group : '';
+      groups[g].push(tm);
+    });
+    function col(key, label){
+      var rows = groups[key].map(function(tm){
+        return '<div class="team-row">' +
+          '<span style="flex:1;">'+esc(tm.name)+'</span>' +
+          '<select class="teamGroupSelect" data-team-id="'+esc(tm.id)+'">' +
+            '<option value=""'+(key===''?' selected':'')+'>Chưa xếp</option>' +
+            '<option value="A"'+(key==='A'?' selected':'')+'>Bảng A</option>' +
+            '<option value="B"'+(key==='B'?' selected':'')+'>Bảng B</option>' +
+          '</select>' +
+        '</div>';
+      }).join('') || '<p class="hint">Chưa có đội.</p>';
+      return '<div class="group-col"><h3>'+label+' ('+groups[key].length+')</h3>' + rows + '</div>';
+    }
+    var cols = col('A','Bảng A') + col('B','Bảng B');
+    if(groups[''].length) cols += col('', 'Chưa xếp bảng');
+    return cols;
+  }
+
+  function matchesListHTML(matches){
+    if(!matches.length) return '<p class="hint">Chưa có lịch. Bấm "Tạo / cập nhật lịch vòng tròn" ở trên.</p>';
+    return matches.map(function(m){
+      var teamA = teamById(m.teamAId), teamB = teamById(m.teamBId);
+      var results = m.results || [null,null,null,null,null];
+      var tally = matchTally(m);
+      var pairRows = PAIR_ROTATION.map(function(pair, i){
+        var letterA = RANK_LETTERS[pair[0]], letterB = RANK_LETTERS[pair[1]];
+        var nameA1 = teamA && teamA.members[pair[0]] ? teamA.members[pair[0]] : ('Trình '+letterA);
+        var nameA2 = teamA && teamA.members[pair[1]] ? teamA.members[pair[1]] : ('Trình '+letterB);
+        var nameB1 = teamB && teamB.members[pair[0]] ? teamB.members[pair[0]] : ('Trình '+letterA);
+        var nameB2 = teamB && teamB.members[pair[1]] ? teamB.members[pair[1]] : ('Trình '+letterB);
+        var picked = results[i];
+        return '<div class="pairrow">' +
+          '<div class="pairnames">Trận '+(i+1)+' ('+letterA+'-'+letterB+'): '+esc(nameA1)+' - '+esc(nameA2)+' &nbsp;vs&nbsp; '+esc(nameB1)+' - '+esc(nameB2)+'</div>' +
+          '<div class="pairpick">' +
+            '<button type="button" class="pickResult'+(picked==='A'?' picked':'')+'" data-match-id="'+esc(m.id)+'" data-idx="'+i+'" data-side="A">'+esc(teamLabel(teamA))+' thắng</button>' +
+            '<button type="button" class="pickResult'+(picked==='B'?' picked':'')+'" data-match-id="'+esc(m.id)+'" data-idx="'+i+'" data-side="B">'+esc(teamLabel(teamB))+' thắng</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+      var scoreText = tally.complete ?
+        (tally.winsA+' - '+tally.winsB+' · '+esc(teamLabel(tally.winnerTeamId===m.teamAId?teamA:teamB))+' thắng') :
+        (tally.played+'/5 ván đã nhập');
+      return '<div class="match-card">' +
+        '<div class="match-title"><span>'+esc(teamLabel(teamA))+' vs '+esc(teamLabel(teamB))+'</span><span class="match-score">'+scoreText+'</span></div>' +
+        pairRows +
+      '</div>';
+    }).join('');
+  }
+
+  function standingsTableHTML(group){
+    var table = computeStandings(group);
+    if(!table.length) return '<p class="hint">Bảng '+group+': chưa có đội.</p>';
+    var rows = table.map(function(row, idx){
+      return '<tr class="'+(idx<3?'top3':'')+'">' +
+        '<td class="rank-no">'+(idx+1)+'</td>' +
+        '<td>'+esc(row.team.name)+'</td>' +
+        '<td>'+row.played+'</td>' +
+        '<td>'+row.wins+'</td>' +
+        '<td>'+row.losses+'</td>' +
+        '<td>'+row.gamesWon+' - '+row.gamesLost+'</td>' +
+      '</tr>';
+    }).join('');
+    return '' +
+      '<h3>Bảng '+group+'</h3>' +
+      '<div class="table-wrap" style="margin-bottom:20px;">' +
+        '<table class="standings-table">' +
+          '<thead><tr><th>#</th><th>Đội</th><th>Trận đã đấu</th><th>Thắng</th><th>Thua</th><th>Hiệp thắng-thua</th></tr></thead>' +
+          '<tbody>'+rows+'</tbody>' +
+        '</table>' +
+      '</div>';
+  }
+
+  function renderAdminGroups(){
+    var t = tour();
+    var teams = t.teams;
+    var teamsHTML = teams.map(function(tm, idx){ return teamCardHTML(tm, idx+1); }).join('') ||
+      '<p class="hint">Chưa có đội nào. Bấm "+ Thêm đội" để bắt đầu.</p>';
+    var matchesA = t.matches.filter(function(m){ return m.group==='A'; });
+    var matchesB = t.matches.filter(function(m){ return m.group==='B'; });
+
+    return '' +
+      '<div class="admin-topbar">' +
+        '<div class="title">Vòng bảng · '+teams.length+' đội</div>' +
+        '<nav>' +
+          '<a href="#/danh-sach">Danh sách công khai</a>' +
+          '<a href="#/">Về trang đăng ký</a>' +
+          '<button class="linklike" id="btnLogout">Đăng xuất</button>' +
+        '</nav>' +
+      '</div>' +
+      adminTabsHTML('vongbang') +
+      '<div class="wrap wide">' +
+
+        '<div class="card">' +
+          '<h2>👥 Danh sách đội</h2>' +
+          '<p class="lead">Nhập tên đội và 5 thành viên theo thứ tự trình từ cao xuống thấp (A → E). Đây là cơ sở để tự sinh lịch ghép cặp khi thi đấu.</p>' +
+          '<div id="teamsContainer">' + teamsHTML + '</div>' +
+          '<button type="button" class="btn-outline" id="btnAddTeam">+ Thêm đội</button> ' +
+          '<button type="button" class="btn btn-primary" id="btnSaveTeams">Lưu danh sách đội</button>' +
+          '<div id="teamsMsg" class="hint" style="'+(state.teamsMsg?'':'display:none;')+'margin-top:10px;">'+esc(state.teamsMsg)+'</div>' +
+        '</div>' +
+
+        '<div class="card">' +
+          '<h2>🎲 Bốc thăm chia bảng</h2>' +
+          '<p class="lead">Bốc thăm ngẫu nhiên chia đều đội vào Bảng A và Bảng B. Có thể chỉnh tay từng đội sau khi bốc nếu cần, sau đó nhớ lưu lại.</p>' +
+          '<button type="button" class="btn btn-primary" id="btnDrawGroups">🎉 Bốc thăm ngay</button> ' +
+          '<button type="button" class="btn btn-outline" id="btnGenSchedule">Tạo / cập nhật lịch vòng tròn</button>' +
+          '<div id="drawMsg" class="hint" style="'+(state.drawMsg?'':'display:none;')+'margin-top:10px;">'+esc(state.drawMsg)+'</div>' +
+          '<div class="group-grid" id="groupGrid">' + groupsOverviewHTML(teams) + '</div>' +
+        '</div>' +
+
+        (t.matches.length ? (
+        '<div class="card">' +
+          '<h2>📋 Lịch &amp; kết quả — Bảng A</h2>' +
+          matchesListHTML(matchesA) +
+        '</div>' +
+        '<div class="card">' +
+          '<h2>📋 Lịch &amp; kết quả — Bảng B</h2>' +
+          matchesListHTML(matchesB) +
+        '</div>' +
+        '<div class="card">' +
+          '<h2>🏅 Bảng xếp hạng</h2>' +
+          '<p class="lead">3 đội xếp hạng cao nhất mỗi bảng (tô vàng) sẽ vào vòng trong.</p>' +
+          standingsTableHTML('A') + standingsTableHTML('B') +
+        '</div>'
+        ) : '') +
+
+      '</div>';
+  }
+
+  function syncTeamsFromDOM(){
+    var cards = document.querySelectorAll('#teamsContainer .team-card');
+    var teams = tour().teams;
+    Array.prototype.forEach.call(cards, function(card, idx){
+      var tm = teams[idx];
+      if(!tm) return;
+      var nameInput = card.querySelector('.teamNameInput');
+      if(nameInput) tm.name = nameInput.value.trim() || tm.name;
+      var members = ['','','','',''];
+      Array.prototype.forEach.call(card.querySelectorAll('.teamMemberInput'), function(inp){
+        members[parseInt(inp.getAttribute('data-rank'),10)] = inp.value.trim();
+      });
+      tm.members = members;
+    });
+  }
+
+  async function saveTournament(){
+    var newCfg = withTournament(state.config, tour());
+    var result = await apiPost({ action: 'saveConfig', config: newCfg, password: state.adminPasswordCache });
+    if(!result.ok) throw new Error(result.error || 'failed');
+    state.config = newCfg;
+  }
+
+  function bindAdminGroups(){
+    var logoutBtn = document.getElementById('btnLogout');
+    if(logoutBtn) logoutBtn.addEventListener('click', function(){
+      state.isAdmin = false; state.adminPasswordCache = '';
+      goTo('/admin');
+    });
+
+    document.getElementById('btnAddTeam').addEventListener('click', function(){
+      syncTeamsFromDOM();
+      var teams = tour().teams;
+      teams.push({
+        id: 't'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+        name: 'Đội ' + (teams.length+1),
+        members: ['','','','',''],
+        group: ''
+      });
+      render();
+    });
+
+    Array.prototype.forEach.call(document.querySelectorAll('.btnRemoveTeam'), function(btn){
+      btn.addEventListener('click', function(){
+        if(!confirm('Xóa đội này? Các trận đấu liên quan (nếu có) sẽ bị xóa khi bạn lưu lại.')) return;
+        syncTeamsFromDOM();
+        var id = btn.getAttribute('data-team-id');
+        var t = tour();
+        t.teams = t.teams.filter(function(tm){ return tm.id !== id; });
+        t.matches = t.matches.filter(function(m){ return m.teamAId !== id && m.teamBId !== id; });
+        render();
+      });
+    });
+
+    document.getElementById('btnSaveTeams').addEventListener('click', async function(){
+      syncTeamsFromDOM();
+      state.teamsMsg = 'Đang lưu…';
+      render();
+      try{
+        await saveTournament();
+        state.teamsMsg = 'Đã lưu danh sách đội.';
+      }catch(err){
+        state.teamsMsg = 'Lưu thất bại, vui lòng thử lại.';
+      }
+      render();
+    });
+
+    document.getElementById('btnDrawGroups').addEventListener('click', function(){
+      var t = tour();
+      if(t.teams.length < 2){ alert('Cần ít nhất 2 đội để bốc thăm.'); return; }
+      if(!confirm('Bốc thăm sẽ chia lại ngẫu nhiên tất cả đội vào Bảng A / Bảng B. Tiếp tục?')) return;
+      syncTeamsFromDOM();
+      drawGroups();
+      state.drawMsg = '🎉 Đã bốc thăm xong! Nhớ bấm "Lưu danh sách đội" hoặc "Tạo / cập nhật lịch vòng tròn" để lưu lại.';
+      render();
+    });
+
+    Array.prototype.forEach.call(document.querySelectorAll('.teamGroupSelect'), function(sel){
+      sel.addEventListener('change', function(){
+        syncTeamsFromDOM();
+        var tm = teamById(sel.getAttribute('data-team-id'));
+        if(tm) tm.group = sel.value;
+        render();
+      });
+    });
+
+    document.getElementById('btnGenSchedule').addEventListener('click', async function(){
+      var t = tour();
+      var groupedCount = t.teams.filter(function(tm){ return tm.group==='A'||tm.group==='B'; }).length;
+      if(groupedCount < 2){ alert('Cần xếp ít nhất 2 đội vào bảng trước khi tạo lịch.'); return; }
+      syncTeamsFromDOM();
+      regenerateAllMatches();
+      state.drawMsg = 'Đang lưu lịch…';
+      render();
+      try{
+        await saveTournament();
+        state.drawMsg = 'Đã tạo/cập nhật lịch vòng tròn.';
+      }catch(err){
+        state.drawMsg = 'Lưu thất bại, vui lòng thử lại.';
+      }
+      render();
+    });
+
+    Array.prototype.forEach.call(document.querySelectorAll('.pickResult'), function(btn){
+      btn.addEventListener('click', async function(){
+        var matchId = btn.getAttribute('data-match-id');
+        var idx = parseInt(btn.getAttribute('data-idx'),10);
+        var side = btn.getAttribute('data-side');
+        var t = tour();
+        var match = t.matches.find(function(m){ return m.id===matchId; });
+        if(!match) return;
+        if(!match.results) match.results = [null,null,null,null,null];
+        var prev = match.results[idx];
+        match.results[idx] = (prev === side) ? null : side;
+        render();
+        try{
+          await saveTournament();
+        }catch(err){
+          match.results[idx] = prev;
+          alert('Không lưu được kết quả, vui lòng thử lại.');
+          render();
+        }
+      });
+    });
+  }
+
   // ---------------- Init ----------------
   async function init(){
     if(!apiConfigured()){
@@ -1700,7 +2140,7 @@
     var cached = loadCache();
     if(cached){
       // Hiện ngay dữ liệu lần trước để trang không bị trắng/chờ, rồi âm thầm lấy bản mới nhất.
-      state.config = cached.config;
+      state.config = normalizeConfig(cached.config);
       state.registrations = cached.registrations;
       syncRoute();
       try{
